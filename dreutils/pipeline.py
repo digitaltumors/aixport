@@ -52,7 +52,7 @@ class PredictionPipelineTool(BaseCommandLineTool):
     """
     Runs benchmark Train step
     """
-    COMMAND = 'benchmarkpipeline'
+    COMMAND = 'predictpipeline'
 
     def __init__(self, theargs):
         """
@@ -83,7 +83,7 @@ class PredictionPipelineTool(BaseCommandLineTool):
                    cmd=PredictionPipelineTool.COMMAND)
 
         parser = subparsers.add_parser(PredictionPipelineTool.COMMAND,
-                                       help='Runs prediction pipeline (same as running predict => evalauate)',
+                                       help='Runs prediction pipeline (same as running predict => evaluate)',
                                        description=desc,
                                        formatter_class=cellmaps_utils.constants.ArgParseFormatter)
 
