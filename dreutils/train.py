@@ -5,11 +5,12 @@ from dreutils.basecmdtool import BaseCommandLineTool
 from dreutils.exceptions import DreutilsError
 import cellmaps_utils.constants
 
-class BenchmarkTool(BaseCommandLineTool):
+
+class TrainTool(BaseCommandLineTool):
     """
     Runs benchmark pipeline
     """
-    COMMAND = 'benchmark'
+    COMMAND = 'train'
 
     def __init__(self, theargs):
         """
@@ -37,10 +38,10 @@ class BenchmarkTool(BaseCommandLineTool):
 
         {cmd} prints Hello world and exits
         """.format(version=dreutils.__version__,
-                   cmd=BenchmarkTool.COMMAND)
+                   cmd=TrainTool.COMMAND)
 
-        parser = subparsers.add_parser(BenchmarkTool.COMMAND,
-                                       help='Runs benchmark',
+        parser = subparsers.add_parser(TrainTool.COMMAND,
+                                       help='Trains DRE models',
                                        description=desc,
                                        formatter_class=cellmaps_utils.constants.ArgParseFormatter)
 

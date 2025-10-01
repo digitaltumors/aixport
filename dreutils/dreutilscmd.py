@@ -11,8 +11,13 @@ import warnings
 import dreutils
 from cellmaps_utils import logutils
 import cellmaps_utils.constants
-from dreutils.basecmdtool import HelloWorldCommand
-from dreutils.benchmarktool import BenchmarkTool
+from dreutils.train import TrainTool
+from dreutils.predict import PredictTool
+from dreutils.evaluate import EvaluateTool
+from dreutils.benchmark import BenchmarkTool
+from dreutils.pipeline import BenchmarkPipelineTool
+from dreutils.pipeline import PredictionPipelineTool
+
 from dreutils.exceptions import DreutilsError
 
 
@@ -39,10 +44,12 @@ def _parse_arguments(desc, args):
                                             'more help')
     subparsers.required = True
 
-    HelloWorldCommand.add_subparser(subparsers)
+    TrainTool.add_subparser(subparsers)
+    PredictTool.add_subparser(subparsers)
     BenchmarkTool.add_subparser(subparsers)
-
-
+    EvaluateTool.add_subparser(subparsers)
+    BenchmarkPipelineTool.add_subparser(subparsers)
+    PredictionPipelineTool.add_subparser(subparsers)
 
     parser.add_argument('--logconf', default=None,
                         help='Path to python logging configuration file in '
@@ -75,13 +82,20 @@ def main(args):
     :rtype: int
     """
 
-    desc = """
+    desc = r"""
 Version {version}
 
+Drug Recommender Engine (DRE) Utilities contains a set of commands that provide
+the ability to train DRE models, assess their performance, run predictions,
+and evaluate those predictions for a given sample.
 
-
-
-    """.format(version=dreutils.__version__)
+    """.format(version=dreutils.__version__,
+               train=TrainTool.COMMAND,
+               predict=PredictTool.COMMAND,
+               benchmark=BenchmarkTool.COMMAND,
+               evaluate=EvaluateTool.COMMAND,
+               benchmarkpipeline=BenchmarkPipelineTool.COMMAND,
+               predictionpipeline=PredictionPipelineTool.COMMAND)
     theargs = _parse_arguments(desc, args[1:])
     theargs.program = args[0]
     theargs.version = cellmaps_utils.__version__
@@ -89,10 +103,18 @@ Version {version}
     try:
         logutils.setup_cmd_logging(theargs)
         logger.debug('Command is: ' + str(theargs.command))
-        if theargs.command == HelloWorldCommand.COMMAND:
-            cmd = HelloWorldCommand(theargs)
+        if theargs.command == TrainTool.COMMAND:
+            cmd = TrainTool(theargs)
+        elif theargs.command == PredictTool.COMMAND:
+            cmd = PredictTool(theargs)
+        elif theargs.command == EvaluateTool.COMMAND:
+            cmd = EvaluateTool(theargs)
         elif theargs.command == BenchmarkTool.COMMAND:
             cmd = BenchmarkTool(theargs)
+        elif theargs.command == BenchmarkPipelineTool.COMMAND:
+            cmd = BenchmarkPipelineTool(theargs)
+        elif theargs.command == PredictionPipelineTool.COMMAND:
+            cmd = PredictionPipelineTool(theargs)
         else:
             raise DreutilsError('Invalid command: ' + str(theargs.command))
         return cmd.run()

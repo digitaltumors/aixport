@@ -4,11 +4,7 @@ import os
 import sys
 import argparse
 import logging
-
-import dreutils
-import cellmaps_utils.constants
 from dreutils.exceptions import DreutilsError
-import cellmaps_utils.constants
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +29,7 @@ class BaseCommandLineTool(object):
         This must be implemented by subclasses and will always raise
         an error
 
-        :raises CellMapsError: will always raise this
+        :raises DreutilsError: will always raise this
         :return:
         """
         raise DreutilsError('Must be implemented by subclass')
@@ -47,48 +43,8 @@ class BaseCommandLineTool(object):
 
         :param subparsers:
         :type subparsers: argparse
+        :raises DreutilsError: will always raise this
         :return:
         """
         raise DreutilsError('Must be implemented by subclass')
 
-
-class HelloWorldCommand(BaseCommandLineTool):
-    """
-    Simply prints Hello World and returns 0 always
-    """
-    COMMAND = 'helloworld'
-
-    def __init__(self, theargs):
-        """
-
-        :param theargs:
-        """
-        super().__init__()
-
-    def run(self):
-        """
-
-        :return:
-        """
-        sys.stdout.write('Hello world\n')
-        return 0
-
-    def add_subparser(subparsers):
-        """
-
-        :return:
-        """
-        desc = """
-
-        Version {version}
-
-        {cmd} prints Hello world and exits
-        """.format(version=dreutils.__version__,
-                   cmd=HelloWorldCommand.COMMAND)
-
-        parser = subparsers.add_parser(HelloWorldCommand.COMMAND,
-                                       help='Prints Hello world and exits',
-                                       description=desc,
-                                       formatter_class=cellmaps_utils.constants.ArgParseFormatter)
-
-        return parser
