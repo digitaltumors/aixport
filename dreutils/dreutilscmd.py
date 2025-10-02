@@ -64,6 +64,9 @@ def _parse_arguments(desc, args):
                              '-v = WARNING, -vv = INFO, '
                              '-vvv = DEBUG, -vvvv = NOTSET (default ERROR '
                              'logging)')
+    parser.add_argument('--skip_logging', action='store_true',
+                        help='If set, output.log, error.log '
+                             'files will not be created')
     parser.add_argument('--version', action='version',
                         version=('%(prog)s ' +
                                  dreutils.__version__))
@@ -104,17 +107,17 @@ and evaluate those predictions for a given sample.
         logutils.setup_cmd_logging(theargs)
         logger.debug('Command is: ' + str(theargs.command))
         if theargs.command == TrainTool.COMMAND:
-            cmd = TrainTool(theargs)
+            cmd = TrainTool(vars(theargs))
         elif theargs.command == PredictTool.COMMAND:
-            cmd = PredictTool(theargs)
+            cmd = PredictTool(vars(theargs))
         elif theargs.command == EvaluateTool.COMMAND:
-            cmd = EvaluateTool(theargs)
+            cmd = EvaluateTool(vars(theargs))
         elif theargs.command == BenchmarkTool.COMMAND:
-            cmd = BenchmarkTool(theargs)
+            cmd = BenchmarkTool(vars(theargs))
         elif theargs.command == BenchmarkPipelineTool.COMMAND:
-            cmd = BenchmarkPipelineTool(theargs)
+            cmd = BenchmarkPipelineTool(vars(theargs))
         elif theargs.command == PredictionPipelineTool.COMMAND:
-            cmd = PredictionPipelineTool(theargs)
+            cmd = PredictionPipelineTool(vars(theargs))
         else:
             raise DreutilsError('Invalid command: ' + str(theargs.command))
         return cmd.run()
