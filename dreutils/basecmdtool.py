@@ -38,6 +38,8 @@ class BaseCommandLineTool(object):
         if provenance_utils is None:
             self._provenance_utils = ProvenanceUtil()
         self._software_ids = []
+        self._generated_ids = []
+        self._used_dataset_ids = []
 
     def _initialize_rocrate(self):
         """
@@ -53,7 +55,7 @@ class BaseCommandLineTool(object):
         """
 
         """
-        pass
+        self._register_computation()
 
 
     def _create_output_directory(self):
@@ -67,6 +69,44 @@ class BaseCommandLineTool(object):
             raise DreutilsError(self._theargs['outdir'] + ' already exists')
         self._theargs['outdir'] = os.path.abspath(self._theargs['outdir'])
         os.makedirs(self._theargs['outdir'], mode=0o755)
+
+    def _register_computation(self, name=None,
+                             run_by=None, command=None,
+                             date_created=None,
+                             description=None,
+                             used_software=None,
+                             used_dataset=None,
+                             generated=None,
+                             keywords=None,
+                             guid=None,
+                             timeout=60):
+        if name is None:
+            name = dreutils.__computation_name__
+        if run_by is None:
+            run_by = self._provenance_utils.get_login()
+        if command is None:
+            command = str(self._theargs)
+        if description is None:
+            description = dreutils.__computation_name__
+        if used_software is None:
+            used_software = self._software_ids
+        if used_dataset is None:
+            used_dataset = self._used_dataset_ids
+        if generated is None:
+            generated = self._generated_ids
+        if keywords is None:
+            keywords = [self.COMMAND]
+        self._provenance_utils.register_computation(self._theargs['outdir'],
+                                                    name=name,
+                                                    run_by=run_by,
+                                                    command=command,
+                                                    description=description,
+                                                    used_software=used_software,
+                                                    used_dataset=used_dataset,
+                                                    generated=generated,
+                                                    keywords=keywords,
+                                                    guid=guid,
+                                                    timeout=timeout)
 
     def _register_software(self, name=None,
                           description=None,
