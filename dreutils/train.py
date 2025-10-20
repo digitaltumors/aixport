@@ -32,6 +32,16 @@ class DRERunner(object):
         """
         raise NotImplementedError('subclasses need to implement')
 
+    def _write_input_ro_crates(self, out=None):
+        """
+
+        """
+        if self._input_rocrates is None or len(self._input_rocrates) == 0:
+            raise DreutilsError('No input RO-Crates')
+
+        for ro_crate in self._input_rocrates:
+            out.write(ro_crate + '\n')
+
 class BashRunner(DRERunner):
     """
     Runs DREs via Bash script
@@ -43,13 +53,6 @@ class BashRunner(DRERunner):
         """
         super().__init__(outdir=outdir, input_rocrates=input_rocrates,
                          algorithms=algorithms)
-
-    def _write_input_ro_crates(self, out=None):
-        """
-
-        """
-        for ro_crate in self._input_rocrates:
-            out.write(ro_crate + '\n')
 
     def _write_algorithms(self, out=None):
         """
@@ -140,12 +143,6 @@ class SLURMRunner(DRERunner):
 
         out.write('INPUT_ROCRATE=`head -n $SLURM_ARRAY_TASK_ID ' + input_rocratefile + ' | tail -n 1`\n')
         out.write('OUTPUT_ROCRATENAME=`basename $INPUT_ROCRATE`\n')
-    def _write_input_ro_crates(self, out=None):
-        """
-
-        """
-        for ro_crate in self._input_rocrates:
-            out.write(ro_crate + '\n')
 
     def _generate_algorithm_command(self, algorithm=None,
                                     input_rocratefile=None):
