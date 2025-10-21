@@ -17,14 +17,32 @@ class BenchmarkTool(BaseCommandLineTool):
 
         :param theargs:
         """
-        super().__init__()
+        super().__init__(theargs)
 
     def run(self):
         """
 
         :return:
         """
-        sys.stdout.write('Hello world\n')
+        exitcode = 99
+        try:
+            # The line below creates output RO-Crate
+            # The path to this output RO-Crate can be
+            # found in self._theargs['outdir']
+            self._initialize_rocrate()
+
+            # TODO: add code to evaluate/benchmark
+            #       predictions found in self._theargs['input']
+            #       RO-Crate aka folder
+
+            # The line below registers the computation
+            # performed by this tool into the RO-Crate
+            # metadata
+            self._finalize_rocrate()
+            return exitcode
+        finally:
+            # write a task finish file
+            self._write_task_finish_json(exitcode)
         return 0
 
     def add_subparser(subparsers):
@@ -44,5 +62,8 @@ class BenchmarkTool(BaseCommandLineTool):
                                        help='Benchmarks predictions on trained DRE models',
                                        description=desc,
                                        formatter_class=cellmaps_utils.constants.ArgParseFormatter)
-
+        parser.add_argument('outdir',
+                            help='Output directory. This directory should not already exist')
+        parser.add_argument('--input',
+                            help='Directory path to predict output RO-Crate')
         return parser
