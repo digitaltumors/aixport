@@ -5,6 +5,11 @@ TRAINED_MODELS_DIRECTORY = 'trainedmodels'
 Name of directory where trained models reside under the train RO-Crate
 """
 
+PREDICTIONS_DIRECTORY = 'predictions'
+"""
+Name of directory where prediction results are written
+"""
+
 TRAIN_PREDICTIONS = 'train_predictions.txt'
 """
 Name of file containing training predictions
