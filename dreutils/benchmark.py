@@ -50,6 +50,10 @@ class BenchmarkTool(BaseCommandLineTool):
         results = {}
         predict_rocrate_path = os.path.abspath(os.path.join(self._theargs['predictions_rocrate'],
                                                             dreutils.constants.PREDICTIONS_DIRECTORY))
+
+        if not os.path.isdir(predict_rocrate_path):
+            raise DreutilsError('predictions_rocrate is NOT a directory')
+
         for entry in os.listdir(predict_rocrate_path):
             fp = os.path.join(predict_rocrate_path, entry)
             if not os.path.isdir(fp):

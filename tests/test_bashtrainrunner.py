@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from dreutils.train import BashRunner
+from dreutils.train import BashTrainRunner
 from dreutils.exceptions import DreutilsError
 
 
@@ -23,18 +23,18 @@ class TestBashRunner(unittest.TestCase):
     def test_constructor(self):
         """Tests parse arguments"""
 
-        runner = BashRunner()
+        runner = BashTrainRunner()
         self.assertEqual(None, runner._outdir)
         self.assertEqual(None, runner._algorithms)
 
-        runner = BashRunner(outdir='hi', algorithms=[])
+        runner = BashTrainRunner(outdir='hi', algorithms=[])
         self.assertEqual('hi', runner._outdir)
         self.assertEqual([], runner._algorithms)
 
     def test_run_no_inputrocrates(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            runner = BashRunner(outdir=temp_dir,
+            runner = BashTrainRunner(outdir=temp_dir,
 
                                  algorithms=['elastic_drecmd.py'])
             res = runner.run()
@@ -47,7 +47,7 @@ class TestBashRunner(unittest.TestCase):
     def test_run(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            runner = BashRunner(outdir=temp_dir,
+            runner = BashTrainRunner(outdir=temp_dir,
                                  input_rocrates=['crate1'],
                                  algorithms=['elastic_drecmd.py'])
             res = runner.run()

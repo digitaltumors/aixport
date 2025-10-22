@@ -6,7 +6,7 @@
 import os
 
 import unittest
-from dreutils.train import DRERunner
+from dreutils.train import DRETrainRunner
 
 
 class TestDRERunner(unittest.TestCase):
@@ -21,17 +21,17 @@ class TestDRERunner(unittest.TestCase):
     def test_constructor(self):
         """Tests parse arguments"""
 
-        runner = DRERunner()
+        runner = DRETrainRunner()
         self.assertEqual(None, runner._outdir)
         self.assertEqual(None, runner._algorithms)
 
-        runner = DRERunner(outdir='hi', algorithms=[])
+        runner = DRETrainRunner(outdir='hi', algorithms=[])
         self.assertEqual('hi', runner._outdir)
         self.assertEqual([], runner._algorithms)
 
     def test_run(self):
         try:
-            runner = DRERunner()
+            runner = DRETrainRunner()
             runner.run()
             self.fail('Expected Exception')
         except NotImplementedError as ne:

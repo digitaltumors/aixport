@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from dreutils.train import SLURMRunner
+from dreutils.train import SLURMTrainRunner
 from dreutils.exceptions import DreutilsError
 
 
@@ -23,18 +23,18 @@ class TestSLURMRunner(unittest.TestCase):
     def test_constructor(self):
         """Tests parse arguments"""
 
-        runner = SLURMRunner()
+        runner = SLURMTrainRunner()
         self.assertEqual(None, runner._outdir)
         self.assertEqual(None, runner._algorithms)
 
-        runner = SLURMRunner(outdir='hi', algorithms=[])
+        runner = SLURMTrainRunner(outdir='hi', algorithms=[])
         self.assertEqual('hi', runner._outdir)
         self.assertEqual([], runner._algorithms)
 
     def test_run_no_inputrocrates(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            runner = SLURMRunner(outdir=temp_dir,
+            runner = SLURMTrainRunner(outdir=temp_dir,
 
                                  algorithms=['elastic_drecmd.py'])
             res = runner.run()
@@ -47,7 +47,7 @@ class TestSLURMRunner(unittest.TestCase):
     def test_run(self):
         temp_dir = tempfile.mkdtemp()
         try:
-            runner = SLURMRunner(outdir=temp_dir,
+            runner = SLURMTrainRunner(outdir=temp_dir,
                                  input_rocrates=['crate1'],
                                  algorithms=['elastic_drecmd.py'])
             res = runner.run()
