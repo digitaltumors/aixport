@@ -11,7 +11,7 @@ from typing import Iterator
 import time
 
 
-class DRERunner(object):
+class DRETrainRunner(object):
     """
     Defines runner for invoking various Drug Recommender engines in
     Training mode
@@ -42,7 +42,7 @@ class DRERunner(object):
         for ro_crate in self._input_rocrates:
             out.write(ro_crate + '\n')
 
-class BashRunner(DRERunner):
+class BashTrainRunner(DRETrainRunner):
     """
     Runs DREs via Bash script
     """
@@ -97,7 +97,7 @@ class BashRunner(DRERunner):
         return 0
 
 
-class SLURMRunner(DRERunner):
+class SLURMTrainRunner(DRETrainRunner):
     """
     Runs DREs via SLURM
     """
@@ -242,12 +242,12 @@ class TrainTool(BaseCommandLineTool):
                 raise DreutilsError('directory path not supported yet')
 
             if self._theargs['run_mode'].lower() == 'slurm':
-                runner = SLURMRunner(outdir=self._theargs['outdir'],
+                runner = SLURMTrainRunner(outdir=self._theargs['outdir'],
                                      algorithms=re.split(r'\s*,\s*',
                                                          self._theargs['algorithms']),
                                      input_rocrates=train_rocrates)
             elif self._theargs['run_mode'].lower() == 'bash':
-                runner = BashRunner(outdir=self._theargs['outdir'],
+                runner = BashTrainRunner(outdir=self._theargs['outdir'],
                                      algorithms=re.split(r'\s*,\s*',
                                                          self._theargs['algorithms']),
                                      input_rocrates=train_rocrates)
