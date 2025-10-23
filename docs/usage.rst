@@ -25,8 +25,12 @@ For information invoke :code:`dreutilscmd.py -h`
    $ ./dreutilscmd.py train trainout --input input_train.txt --algorithms elasticnet_drecmd.py --run_mode bash
 
 ``input_train.txt`` should contain absolute paths to ``*_train_rocrate`` directories,
-one per line. The command will populate ``trainout/trainedmodels`` with per-algorithm
-trained model directories.
+one per line. The command will populate ``trainout`` with bash script that populates ``trainout/trainedmodels`` with per-algorithm
+trained model directories. Then run the bash script:
+
+.. Code-block::
+
+   ./trainout/bash_train_job.sh
 
 **Prediction**
 
@@ -34,13 +38,13 @@ trained model directories.
 
    $ ./dreutilscmd.py predict predictout --input input_test.txt --trainedmodels trainout/trainedmodels --algorithms elasticnet_drecmd.py --run_mode bash
 
-``input_test.txt`` should list the ``*_test_rocrate`` directories to evaluate, and
+``input_test.txt`` should list the ``*_test_rocrate`` directories with test data, and
 ``trainout/trainedmodels`` should contain subdirectories named
-``<drugname>_train_rocrate_<algorithm>`` produced by the training step.
+``<drugname>_train_rocrate_<algorithm>`` produced by the training step. Then run the bash script:
 
-.. code-block::
+.. Code-block::
 
-   dreutilscmd.py # TODO Add other needed arguments here
+   ./predictout/bash_predict_job.sh
 
 Via Docker
 ---------------
@@ -54,3 +58,21 @@ Via Docker
 
    Coming soon ...
 
+RO-Crate Zipping Utility
+------------------------
+
+The `ROCrateZipper` helper can bundle an entire RO-Crate directory into a ZIP
+archive and inspect or extract its contents. This is useful for publishing or
+sharing generated RO-Crates.
+
+**Example usage**
+
+.. code-block:: python
+
+   from dreutils import ROCrateZipper
+
+   zipper = ROCrateZipper("/path/to/folder", "/path/to/output.zip")
+   zipper.zip_directory()
+   print(zipper.list_contents())  # View all files in the zip
+   data = zipper.read_file("subfolder/data.txt")  # Access a specific file
+   zipper.extract_file("subfolder/data.txt", "/tmp/extracted/")  # Extract one file
