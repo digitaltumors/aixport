@@ -16,6 +16,7 @@ Utilities for Drug Recommender Engine Tools
 
    installation
    usage
+   inputs
    modules
    developer
    authors
