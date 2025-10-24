@@ -17,6 +17,7 @@ Utilities for Drug Recommender Engine Tools
    installation
    usage
    inputs
+   expectedmodelinterface
    modules
    developer
    authors
