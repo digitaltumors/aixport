@@ -97,11 +97,13 @@ class BenchmarkTool(BaseCommandLineTool):
         """
         df = results_df.copy()
 
-        # Optional sort to make the plot easier to scan
-        if sort_by in ("pearson_correlation", "spearman_correlation"):
-            df = df.sort_values(sort_by, ascending=False, kind="mergesort")
+        # Optional sort to make the plot easier to scan. If not provided, default to Pearson.
+        effective_sort = sort_by if sort_by in ("pearson_correlation", "spearman_correlation") else "pearson_correlation"
+        df = df.sort_values(effective_sort, ascending=False, kind="mergesort")
 
         names = df["predict_rocrate_name"].astype(str).tolist()
+        # Shorten noisy suffixes for readability on the x-axis
+        names = [n.replace("_test_rocrate_elasticnet_drecmd", "") for n in names]
         pearson = df["pearson_correlation"].to_numpy()
         spearman = df["spearman_correlation"].to_numpy()
         n = len(df)
@@ -109,19 +111,21 @@ class BenchmarkTool(BaseCommandLineTool):
         x = np.arange(n)
 
         # Figure size scales with number of drugs, within bounds
-        fig_w = min(60, max(10, n * width_per_label))   # 10"–60"
+        fig_w = min(60, max(12, n * max(0.22, width_per_label)))   # 12"–60"
         fig_h = 6.0
 
         fig, ax1 = plt.subplots(figsize=(fig_w, fig_h))
         # Left axis: Pearson
-        p_scatter = ax1.scatter(x, pearson, s=20, alpha=0.9, linewidths=0, marker="o")
+        point_size = 28 if n <= 50 else 18
+        p_scatter = ax1.scatter(x, pearson, s=point_size, alpha=0.9, linewidths=0, marker="o")
         ax1.set_ylabel("Pearson correlation", labelpad=8)
         ax1.set_ylim(-1.0, 1.0)
         ax1.yaxis.grid(True, linestyle="--", alpha=0.35)
 
         # Right axis: Spearman
         ax2 = ax1.twinx()
-        s_scatter = ax2.scatter(x, spearman, s=20, alpha=0.9, linewidths=0, marker="x")
+        # Use visible stroke for "x" marker and a contrasting color so points are readable
+        s_scatter = ax2.scatter(x, spearman, s=point_size, alpha=0.9, linewidths=0.8, marker="x", color="#d62728")
         ax2.set_ylabel("Spearman correlation", labelpad=8)
         ax2.set_ylim(-1.0, 1.0)
 
@@ -139,7 +143,7 @@ class BenchmarkTool(BaseCommandLineTool):
         # Legend (custom so it works with twin axes)
         legend_handles = [
             Line2D([0], [0], marker="o", linestyle="None", label="Pearson"),
-            Line2D([0], [0], marker="x", linestyle="None", label="Spearman"),
+            Line2D([0], [0], marker="x", linestyle="None", label="Spearman", markeredgewidth=1.2, color="#d62728"),
         ]
         ax1.legend(handles=legend_handles, loc="upper left", frameon=False)
 
@@ -149,8 +153,11 @@ class BenchmarkTool(BaseCommandLineTool):
         outdir = self._theargs["outdir"]
         os.makedirs(outdir, exist_ok=True)
         png_path = os.path.join(outdir, "results.png")
+        svg_path = os.path.join(outdir, "results.svg")
 
         plt.savefig(png_path, dpi=400, bbox_inches="tight")
+        # Also emit an SVG for zoomable inspection
+        plt.savefig(svg_path, bbox_inches="tight")
         plt.close()
 
     def run(self):
