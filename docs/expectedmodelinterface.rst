@@ -41,6 +41,11 @@ Command Line Signature
     ``--model`` is mandatory for ``test``/``predict`` and optional for
     ``train``/``optimizetrain`` when training from scratch.
 
+``--config_file`` ``</path/to/configuration>``
+    Path to an algorithm-specific configuration file. Implementations
+    MAY ignore the flag when they do not support external configuration and
+    MUST preserve existing defaults when the flag is omitted.
+
 Behavioural Requirements
 ------------------------
 
