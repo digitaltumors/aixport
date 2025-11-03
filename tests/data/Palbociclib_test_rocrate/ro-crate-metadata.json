@@ -1,0 +1,115 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.1/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "about": {
+        "@id": "./"
+      },
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.1"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "Palbociclib Test Data",
+      "description": "Test drug response data for Palbociclib (replicates collapsed)",
+      "datePublished": "2025-10-21T12:54:02.037585",
+      "hasPart": [
+        {
+          "@id": "test_data.txt",
+          "@type": "File",
+          "name": "test_data.txt",
+          "format": "text/plain"
+        },
+        {
+          "@id": "gene2ind.txt",
+          "@type": "File",
+          "name": "gene2ind.txt",
+          "format": "text/plain"
+        },
+        {
+          "@id": "cell2ind.txt",
+          "@type": "File",
+          "name": "cell2ind.txt",
+          "format": "text/plain"
+        },
+        {
+          "@id": "cell2cnamplification.txt",
+          "@type": "File",
+          "name": "cell2cnamplification.txt",
+          "format": "text/plain"
+        },
+        {
+          "@id": "cell2cndeletion.txt",
+          "@type": "File",
+          "name": "cell2cndeletion.txt",
+          "format": "text/plain"
+        },
+        {
+          "@id": "cell2mutation.txt",
+          "@type": "File",
+          "name": "cell2mutation.txt",
+          "format": "text/plain"
+        },
+        {
+          "@id": "hierarchy.cx2",
+          "@type": "File",
+          "name": "hierarchy.cx2",
+          "format": "text/plain"
+        }
+      ]
+    },
+    {
+      "@id": "test_data.txt",
+      "@type": "File",
+      "name": "test_data.txt",
+      "format": "text/plain",
+      "description": "Test data for Palbociclib (replicates collapsed)"
+    },
+    {
+      "@id": "gene2ind.txt",
+      "@type": "File",
+      "name": "gene2ind.txt",
+      "format": "text/plain",
+      "description": "Gene to index mapping file"
+    },
+    {
+      "@id": "cell2ind.txt",
+      "@type": "File",
+      "name": "cell2ind.txt",
+      "format": "text/plain",
+      "description": "Cell line to index mapping file"
+    },
+    {
+      "@id": "cell2cnamplification.txt",
+      "@type": "File",
+      "name": "cell2cnamplification.txt",
+      "format": "text/plain",
+      "description": "Cell line copy number amplification data"
+    },
+    {
+      "@id": "cell2cndeletion.txt",
+      "@type": "File",
+      "name": "cell2cndeletion.txt",
+      "format": "text/plain",
+      "description": "Cell line copy number deletion data"
+    },
+    {
+      "@id": "cell2mutation.txt",
+      "@type": "File",
+      "name": "cell2mutation.txt",
+      "format": "text/plain",
+      "description": "Cell line mutation data"
+    },
+    {
+      "@id": "hierarchy.cx2",
+      "@type": "File",
+      "name": "hierarchy.cx2",
+      "format": "text/plain",
+      "description": "Hierarchy data file"
+    }
+  ]
+}
