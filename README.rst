@@ -63,15 +63,37 @@ Output:
 Usage
 -----
 
-For information invoke :code:`dreutilscmd.py -h`
+For a summary of available commands run :code:`dreutilscmd.py -h`. Each sub-command
+also exposes its own help via :code:`dreutilscmd.py <command> -h`.
 
-**Example usage**
+Benchmark mode
+~~~~~~~~~~~~~~
 
-**TODO:** Add information about example usage
+``dreutilscmd.py`` can score previously generated prediction RO-Crates against their
+matching test RO-Crates. The benchmark command expects:
 
-.. code-block::
+1. A text file (``--input_test_rocrates``) listing absolute or relative paths to the
+   test RO-Crates used to generate the predictions, one path per line.
+2. A prediction RO-Crate directory (``--predictions_rocrate``) produced by
+   ``dreutilscmd.py predict`` or the benchmark pipeline. It must contain the bundled
+   ``predictions`` subdirectory created by the CLI.
+3. An output directory that does not yet exist. Benchmark mode will create it and
+   write the aggregated metrics, plots, and RO-Crate metadata there.
 
-   dreutilscmd.py # TODO Add other needed arguments here
+Run the benchmark command as:
+
+.. code-block:: console
+
+   dreutilscmd.py benchmark <OUTPUT_DIR> \
+       --input_test_rocrates /path/to/test_rocrates.txt \
+       --predictions_rocrate /path/to/predictions_crate
+
+The tool reads each prediction RO-Crate, matches it back to the corresponding test
+RO-Crate, and computes Pearson/Spearman correlations. Results are saved to
+``results.csv`` and plotted to ``results.png``/``results.svg`` in ``<OUTPUT_DIR>``.
+
+Use ``-v`` (repeat up to three times) for more verbose logging, or supply
+``--logconf`` with a custom logging configuration if desired.
 
 For developers
 -------------------------------------------

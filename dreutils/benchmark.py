@@ -78,7 +78,16 @@ class BenchmarkTool(BaseCommandLineTool):
                 json_data = json.load(f)
             test_rocrate_name = json_data['commandlineargs']['input_crate']
 
-            predict_df = pd.read_csv(os.path.join(predict_rocrate_path, 'test_predictions.txt'), sep='\t', header=None, names=['auc']   )
+            predictions_file = os.path.join(predict_rocrate_path, 'test_predictions.txt')
+            if not os.path.isfile(predictions_file):
+                alt_predictions_file = os.path.join(predict_rocrate_path, 'predictions.txt')
+                if os.path.isfile(alt_predictions_file):
+                    predictions_file = alt_predictions_file
+                else:
+                    raise DreutilsError('Missing predictions file in ' + predict_rocrate_path +
+                                        '; expected test_predictions.txt or predictions.txt')
+
+            predict_df = pd.read_csv(predictions_file, sep='\t', header=None, names=['auc'])
             test_df = pd.read_csv(os.path.join(test_rocrate_name, 'test_data.txt'), sep='\t', header=None, names=['cell', 'smiles', 'auc', 'dataset'])
 
             # calculate the pearson and spearman correlation between the predict_df and test_df

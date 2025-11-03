@@ -22,7 +22,7 @@ For information invoke :code:`dreutilscmd.py -h`
 
 .. code-block:: console
 
-   $ ./dreutilscmd.py train trainout --input input_train.txt --algorithms elasticnet_drecmd.py --run_mode bash
+   $ dreutilscmd.py train trainout --input input_train.txt --algorithms elasticnet_drecmd.py --run_mode bash
 
 ``input_train.txt`` should contain absolute paths to ``*_train_rocrate`` directories,
 one per line. The command will populate ``trainout`` with bash script that populates ``trainout/trainedmodels`` with per-algorithm
@@ -36,7 +36,7 @@ trained model directories. Then run the bash script:
 
 .. code-block:: console
 
-   $ ./dreutilscmd.py predict predictout --input input_test.txt --trainedmodels trainout/trainedmodels --algorithms elasticnet_drecmd.py --run_mode bash
+   $ dreutilscmd.py predict predictout --input input_test.txt --trainedmodels trainout/trainedmodels --algorithms elasticnet_drecmd.py --run_mode bash
 
 ``input_test.txt`` should list the ``*_test_rocrate`` directories with test data, and
 ``trainout/trainedmodels`` should contain subdirectories named
@@ -45,6 +45,21 @@ trained model directories. Then run the bash script:
 .. Code-block::
 
    ./predictout/bash_predict_job.sh
+
+**Benchmark**
+
+.. code-block:: console
+
+   $ dreutilscmd.py benchmark benchmarkout \
+       --input_test_rocrates input_test.txt \
+       --predictions_rocrate predictout
+
+``input_test.txt`` should match the file used during prediction and list the test
+RO-Crates, one per line. ``predictout`` should be the prediction RO-Crate folder produced
+by ``dreutilscmd.py predict`` (or the pipeline), containing the ``predictions`` subdirectory.
+The benchmark command creates ``benchmarkout`` (must not already exist), computes
+Pearson/Spearman correlations between predictions and ground truth, writes ``results.csv``,
+and generates ``results.png``/``results.svg`` for quick inspection.
 
 Via Docker
 ---------------
