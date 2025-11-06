@@ -6,6 +6,16 @@ Artificial Intelligence Predictive Oncology Research Toolkit
 AIxPORT is provides standards and tools train, evaluate, and run
 predictions with AI models for predicting drug response.
 
+.. image:: https://app.travis-ci.com/digitaltumors/aixport.svg?branch=main
+        :target: https://app.travis-ci.com/digitaltumors/aixport
+
+.. image:: https://readthedocs.org/projects/aixport/badge/?version=latest
+        :target: https://aixport.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
+* Documentation: https://aixport.readthedocs.io.
+* Source code: https://github.com/digitaltumors/aixport
+
 Dependencies
 ------------
 
