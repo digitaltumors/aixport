@@ -3,10 +3,10 @@ import json
 import os
 import sys
 import re
-import dreutils
-from dreutils.basecmdtool import BaseCommandLineTool
-from dreutils.exceptions import DreutilsError
-import dreutils.constants
+import aixport
+from aixport.basecmdtool import BaseCommandLineTool
+from aixport.exceptions import AIxPORTError
+import aixport.constants
 import cellmaps_utils.constants
 from typing import Iterator
 import time
@@ -42,7 +42,7 @@ class DRETrainRunner(object):
 
         """
         if self._input_rocrates is None or len(self._input_rocrates) == 0:
-            raise DreutilsError('No input RO-Crates')
+            raise AIxPORTError('No input RO-Crates')
 
         for ro_crate in self._input_rocrates:
             out.write(ro_crate + '\n')
@@ -101,7 +101,7 @@ class BashTrainRunner(DRETrainRunner):
             f.write('#! /bin/bash\n\n')
             f.write('BASEDIR=`dirname $0`\n')
             f.write('pushd $BASEDIR\n')
-            f.write('OUTDIR="' + str(dreutils.constants.TRAINED_MODELS_DIRECTORY) + '"\n')
+            f.write('OUTDIR="' + str(aixport.constants.TRAINED_MODELS_DIRECTORY) + '"\n')
             num_algos = len(self._algorithms)
             num_training_datasets = len(self._input_rocrates)
             f.write('\necho "Training ' + str(num_algos) + ' models on ' +
@@ -189,9 +189,9 @@ class SLURMTrainRunner(DRETrainRunner):
             config_value = '' if algorithm_config is None else str(algorithm_config)
             if config_value.strip():
                 escaped_config = config_value.replace('"', '\\"')
-                f.write(algorithm + ' "' + dreutils.constants.TRAINED_MODELS_DIRECTORY + '/${OUTPUT_ROCRATENAME}_' + algorithm + '" --input_rocrate "$INPUT_ROCRATE" --mode train --config "' + escaped_config + '"\n')
+                f.write(algorithm + ' "' + aixport.constants.TRAINED_MODELS_DIRECTORY + '/${OUTPUT_ROCRATENAME}_' + algorithm + '" --input_rocrate "$INPUT_ROCRATE" --mode train --config "' + escaped_config + '"\n')
             else:
-                f.write(algorithm + ' "' + dreutils.constants.TRAINED_MODELS_DIRECTORY + '/${OUTPUT_ROCRATENAME}_' + algorithm + '" --input_rocrate "$INPUT_ROCRATE" --mode train\n')
+                f.write(algorithm + ' "' + aixport.constants.TRAINED_MODELS_DIRECTORY + '/${OUTPUT_ROCRATENAME}_' + algorithm + '" --input_rocrate "$INPUT_ROCRATE" --mode train\n')
             f.write('exit $?\n')
         os.chmod(job_script, 0o755)
         return os.path.basename(job_script)
@@ -272,10 +272,10 @@ class TrainTool(BaseCommandLineTool):
                 with open(algorithms_arg, 'r') as f:
                     algorithms_data = json.load(f)
             except (OSError, json.JSONDecodeError) as ex:
-                raise DreutilsError('Unable to load algorithms configuration file: ' +
+                raise AIxPORTError('Unable to load algorithms configuration file: ' +
                                     str(ex))
             if not isinstance(algorithms_data, dict):
-                raise DreutilsError('Algorithms configuration file must be a JSON object')
+                raise AIxPORTError('Algorithms configuration file must be a JSON object')
 
             algorithms = []
             algorithm_configs = {}
@@ -285,7 +285,7 @@ class TrainTool(BaseCommandLineTool):
                     algorithm_configs[algo_name] = ''
                     continue
                 if not isinstance(algo_settings, dict):
-                    raise DreutilsError('Configuration for algorithm ' + str(algo_name) +
+                    raise AIxPORTError('Configuration for algorithm ' + str(algo_name) +
                                         ' must be a JSON object or null')
                 config_path = algo_settings.get('config', '')
                 if config_path is None:
@@ -310,7 +310,7 @@ class TrainTool(BaseCommandLineTool):
             self._initialize_rocrate()
             runner = None
             os.makedirs(os.path.join(self._theargs['outdir'],
-                                     dreutils.constants.TRAINED_MODELS_DIRECTORY),
+                                     aixport.constants.TRAINED_MODELS_DIRECTORY),
                         mode=0o755)
 
             train_rocrates = []
@@ -318,11 +318,11 @@ class TrainTool(BaseCommandLineTool):
             if os.path.isfile(self._theargs['input']):
                 train_rocrates = list(self._get_training_rocrates(self._theargs['input']))
             elif os.path.isdir(self._theargs['input']):
-                raise DreutilsError('directory path not supported yet')
+                raise AIxPORTError('directory path not supported yet')
 
             algorithms, algorithm_configs = self._parse_algorithms_argument()
             if len(algorithms) == 0:
-                raise DreutilsError('No algorithms specified')
+                raise AIxPORTError('No algorithms specified')
 
             if self._theargs['run_mode'].lower() == 'slurm':
                 runner = SLURMTrainRunner(outdir=self._theargs['outdir'],
@@ -335,7 +335,7 @@ class TrainTool(BaseCommandLineTool):
                                          algorithm_configs=algorithm_configs,
                                          input_rocrates=train_rocrates)
             else:
-                raise DreutilsError('Invalid run mode: ' + str(self._theargs['run_mode']))
+                raise AIxPORTError('Invalid run mode: ' + str(self._theargs['run_mode']))
 
             exitcode = runner.run()
 
@@ -358,7 +358,7 @@ class TrainTool(BaseCommandLineTool):
         Version {version}
 
         {cmd} Trains DRE Models
-        """.format(version=dreutils.__version__,
+        """.format(version=aixport.__version__,
                    cmd=TrainTool.COMMAND)
 
         parser = subparsers.add_parser(TrainTool.COMMAND,

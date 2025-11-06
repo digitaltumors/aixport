@@ -1,7 +1,7 @@
 Creating a new release
 ===========================
 
-This is an advanced developer section that describes creation of a new release for dreutils and deploying
+This is an advanced developer section that describes creation of a new release for aixport and deploying
 that release onto PyPi_
 
 .. note::
@@ -61,13 +61,13 @@ First run **git tag** to find the latest version. Pick the next highest version 
 
     Versions should adhere to this :ref:`versioningscheme:Versioning Scheme`
 
-Be sure to update the version in ``dreutils/__init__.py`` Omit the ``v`` when setting the version in the file.
+Be sure to update the version in ``aixport/__init__.py`` Omit the ``v`` when setting the version in the file.
 
 Commit the above changes and push to **main**:
 
 .. code-block::
 
-    git commit -m 'message...' dreutils/__init__.py
+    git commit -m 'message...' aixport/__init__.py
     git push origin main
 
 Tagging code
@@ -95,7 +95,7 @@ The tag should be visible from github now. If not something is wrong.
 Create distributable binaries
 --------------------------------
 
-From dreutils source tree generate the wheel and tar.gz files
+From aixport source tree generate the wheel and tar.gz files
 
 .. code-block::
 
@@ -107,15 +107,15 @@ Under ``dist/`` will be files such as these:
 
     $ tree
     dist
-    |-- dreutils-0.1.0-py2.py3-none-any.whl
-    `-- dreutils-0.1.0.tar.gz
+    |-- aixport-0.1.0-py2.py3-none-any.whl
+    `-- aixport-0.1.0.tar.gz
 
 Documenting release on Github
 --------------------------------
 
 Be sure to add release notes to HISTORY.rst file in source tree and be sure the text is in restructured text format otherwise it will fail to install on PyPI. To check text paste it into this site
 
-#. From https://github.com/digitaltumors/dreutils click on releases link.
+#. From https://github.com/digitaltumors/aixport click on releases link.
 #. Click on the Draft a new release button.
 #. In the Tag version field select the version set above.
 #. Enter a release title and describe changes in release copying notes put into HISTORY.rst.
@@ -132,13 +132,13 @@ Be sure to add release notes to HISTORY.rst file in source tree and be sure the 
 
         The above requires one to have accounts on Test PyPI serverand a credential file setup in your home directory. See :doc:`pypircfile` for more information.
 
-Once the above is done verify deploy was successful by browsing to https://testpypi.python.org/pypi/dreutils and verifying new release was deployed.
+Once the above is done verify deploy was successful by browsing to https://testpypi.python.org/pypi/aixport and verifying new release was deployed.
 
 Also test the package by installing it locally by running this:
 
 .. code-block::
 
-    pip install -i https://testpypi.python.org/pypi dreutils
+    pip install -i https://testpypi.python.org/pypi aixport
 
 .. note::
 
@@ -159,10 +159,10 @@ If the above works perform the formal release by running:
 
 .. code-block::
 
-    pip install dreutils
+    pip install aixport
 
 
-.. _Travis: https://travis-ci.com/digitaltumors/dreutils
-.. _main: https://github.com/digitaltumors/dreutils/tree/main
+.. _Travis: https://travis-ci.com/digitaltumors/aixport
+.. _main: https://github.com/digitaltumors/aixport/tree/main
 .. _PyPi: https://pypi.org
 .. _TestPyPi: https://test.pypi.org

@@ -4,10 +4,10 @@ import os
 import argparse
 import logging
 import time
-import dreutils
+import aixport
 from cellmaps_utils import logutils
 from cellmaps_utils.provenance import ProvenanceUtil
-from dreutils.exceptions import DreutilsError
+from aixport.exceptions import AIxPORTError
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +62,11 @@ class BaseCommandLineTool(object):
         """
         Creates output directory if it does not already exist
 
-        :raises DreutilsError: If output directory is None or if directory already exists
+        :raises AIxPORTError: If output directory is None or if directory already exists
         """
 
         if os.path.isdir(self._theargs['outdir']):
-            raise DreutilsError(self._theargs['outdir'] + ' already exists')
+            raise AIxPORTError(self._theargs['outdir'] + ' already exists')
         self._theargs['outdir'] = os.path.abspath(self._theargs['outdir'])
         os.makedirs(self._theargs['outdir'], mode=0o755)
 
@@ -81,13 +81,13 @@ class BaseCommandLineTool(object):
                              guid=None,
                              timeout=60):
         if name is None:
-            name = dreutils.__computation_name__
+            name = aixport.__computation_name__
         if run_by is None:
             run_by = self._provenance_utils.get_login()
         if command is None:
             command = str(self._theargs)
         if description is None:
-            description = dreutils.__computation_name__
+            description = aixport.__computation_name__
         if used_software is None:
             used_software = self._software_ids
         if used_dataset is None:
@@ -116,19 +116,19 @@ class BaseCommandLineTool(object):
                           guid=None,
                           timeout=30):
         if name is None:
-            name = dreutils.__computation_name__
+            name = aixport.__computation_name__
         if description is None:
-            description = dreutils.__description__
+            description = aixport.__description__
         if author is None:
-            author = dreutils.__author__
+            author = aixport.__author__
         if version is None:
-            version = dreutils.__version__
+            version = aixport.__version__
         if file_format is None:
             file_format = 'py'
         if url is None:
-            url = dreutils.__repo_url__
+            url = aixport.__repo_url__
         if keywords is None:
-            keywords = [dreutils.__computation_name__, 'software',
+            keywords = [aixport.__computation_name__, 'software',
                         'Drug Recommender Engine']
         return self._provenance_utils.register_software(self._theargs['outdir'],
                                                         name=name,
@@ -169,7 +169,7 @@ class BaseCommandLineTool(object):
                                                 guid=guid,
                                                 timeout=timeout)
 
-    def _initialize_logging(self, handlerprefix='dreutils'):
+    def _initialize_logging(self, handlerprefix='aixport'):
         """
 
         :param handlerprefix:
@@ -222,10 +222,10 @@ class BaseCommandLineTool(object):
         This must be implemented by subclasses and will always raise
         an error
 
-        :raises DreutilsError: will always raise this
+        :raises AIxPORTError: will always raise this
         :return:
         """
-        raise DreutilsError('Must be implemented by subclass')
+        raise AIxPORTError('Must be implemented by subclass')
 
     @staticmethod
     def add_subparser(subparsers):
@@ -236,8 +236,8 @@ class BaseCommandLineTool(object):
 
         :param subparsers:
         :type subparsers: argparse
-        :raises DreutilsError: will always raise this
+        :raises AIxPORTError: will always raise this
         :return:
         """
-        raise DreutilsError('Must be implemented by subclass')
+        raise AIxPORTError('Must be implemented by subclass')
 

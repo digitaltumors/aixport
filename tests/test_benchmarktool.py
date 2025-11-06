@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Integration Tests for `dreutils` package."""
+"""Integration Tests for `aixport` package."""
 
 import os
 import shutil
 import tempfile
 import unittest
-from dreutils.benchmark import BenchmarkTool
-from dreutils.exceptions import DreutilsError
+from aixport.benchmark import BenchmarkTool
+from aixport.exceptions import AIxPORTError
 
 
 class TestBenchmarkTool(unittest.TestCase):
-    """Tests for `dreutils` package."""
+    """Tests for `aixport` package."""
 
     def setUp(self):
         """Set up test fixtures, if any."""
@@ -31,14 +31,15 @@ class TestBenchmarkTool(unittest.TestCase):
                                   'input_test_rocrates': temp_dir})
             tool.run()
             self.fail('Expected Exception')
-        except DreutilsError as de:
+        except AIxPORTError as de:
             self.assertEqual('predictions_rocrate is NOT a directory', str(de))
         finally:
             shutil.rmtree(temp_dir)
 
+    @unittest.skip('Needs to be generalized')
     def test_evaluate_predictions(self):
         """
-        Test if len(results_df) is equal to number of lines in input_test_rocrates. Using /cellar/users/abishai/digitaltumors/predictout as prediction_rocrate and /cellar/users/abishai/test_v1_43_drugs.txt as input_test_rocrates    
+        Test if len(results_df) is equal to number of lines in input_test_rocrates. Using /cellar/users/abishai/digitaltumors/predictout as prediction_rocrate and /cellar/users/abishai/test_v1_43_drugs.txt as input_test_rocrates
         """
         temp_dir = tempfile.mkdtemp()
         try:

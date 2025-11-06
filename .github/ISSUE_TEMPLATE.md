@@ -1,4 +1,4 @@
-* Drug Recommender Engine Utilities version:
+* Artificial Intelligence Predictive Oncology Research Toolkit version:
 * Python version:
 * Operating System:
 

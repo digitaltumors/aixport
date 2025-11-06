@@ -51,7 +51,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with flake8
-	flake8 dreutils tests
+	flake8 aixport tests
 
 test: ## run tests quickly with the default Python
 	pytest
@@ -60,13 +60,13 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source dreutils -m unittest discover
+	coverage run --source aixport -m unittest discover
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs
-	sphinx-apidoc -o docs/ dreutils
+	sphinx-apidoc -o docs/ aixport
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html
@@ -90,9 +90,9 @@ install: clean ## install the package to the active Python's site-packages
 	python -m pip install .
 
 dockerbuild: ## build docker image and store in local repository
-	@cv=`grep '__version__' dreutils/__init__.py | sed "s/^.*= *'//" | sed "s/'.*//"`; \
-	docker build -t digitaltumors/dreutils:$$cv -f docker/Dockerfile .
+	@cv=`grep '__version__' aixport/__init__.py | sed "s/^.*= *'//" | sed "s/'.*//"`; \
+	docker build -t digitaltumors/aixport:$$cv -f docker/Dockerfile .
 
 dockerpush: ## push image to dockerhub
-	@cv=`grep '__version__' dreutils/__init__.py | sed "s/^.*= *'//" | sed "s/'.*//"`; \
-	docker push digitaltumors/dreutils:$$cv
+	@cv=`grep '__version__' aixport/__init__.py | sed "s/^.*= *'//" | sed "s/'.*//"`; \
+	docker push digitaltumors/aixport:$$cv

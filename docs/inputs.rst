@@ -2,12 +2,12 @@
 Inputs
 =========
 
-The Drug Recommender Engine (DRE) utilities exchange datasets via
+The Artificial Intelligence Predictive Oncology Research Toolkit (AIxPORT) utilities exchange datasets via
 `RO-Crate <https://www.researchobject.org/ro-crate>`_ bundles.  Each bundle is
 a directory that carries a ``ro-crate-metadata.json`` file.  This page
 documents the expected layout for the ``*_train_rocrate`` and
-``*_test_rocrate`` folders consumed by ``dreutilscmd.py train`` and
-``dreutilscmd.py predict``.
+``*_test_rocrate`` folders consumed by ``aixportcmd.py train`` and
+``aixportcmd.py predict``.
 
 .. note::
 
@@ -94,7 +94,7 @@ Additionally to the feature tables, training crates include the training data:
         HS633T_SOFT_TISSUE	CC1=C(C(=O)N(C2=NC(=NC=C12)NC3=NC=C(C=C3)N4CCNCC4)C5CCCC5)C(=O)C	0.6695136077442607	GDSC2
         KINGS1_CENTRAL_NERVOUS_SYSTEM	CC1=C(C(=O)N(C2=NC(=NC=C12)NC3=NC=C(C=C3)N4CCNCC4)C5CCCC5)C(=O)C	0.6444092636032414	GDSC1
 
-Running ``dreutilscmd.py train`` writes algorithm-specific output RO-Crates
+Running ``aixportcmd.py train`` writes algorithm-specific output RO-Crates
 under ``<output>/trainedmodels``.  Each subdirectory includes the fitted model (for example,
 ``model.pt`` or ``model.pkl``), and a ``train_predictions.txt`` file that
 captures in-sample predictions.
@@ -114,7 +114,7 @@ Testing crates use the same feature tables as the training crates and includes a
         EW24_BONE	CC1=C(C(=O)N(C2=NC(=NC=C12)NC3=NC=C(C=C3)N4CCNCC4)C5CCCC5)C(=O)C	0.98852067122827	GDSC1
         OCILY7_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE	CC1=C(C(=O)N(C2=NC(=NC=C12)NC3=NC=C(C=C3)N4CCNCC4)C5CCCC5)C(=O)C	0.2728634745574858	GDSC1
 
-``dreutilscmd.py predict`` pairs each ``*_test_rocrate`` with the corresponding
+``aixportcmd.py predict`` pairs each ``*_test_rocrate`` with the corresponding
 trained model directory (``<dataset>_train_rocrate_<algorithm>``).  The command
 generates per-algorithm output directories beneath
 ``<output>/predictions`` that contain RO-Crate metadata, prediction scores, and

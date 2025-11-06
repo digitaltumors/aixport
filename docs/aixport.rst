@@ -1,85 +1,85 @@
-dreutils package
+aixport package
 ================
 
 Submodules
 ----------
 
-dreutils.basecmdtool module
+aixport.basecmdtool module
 ---------------------------
 
-.. automodule:: dreutils.basecmdtool
+.. automodule:: aixport.basecmdtool
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.benchmark module
+aixport.benchmark module
 -------------------------
 
-.. automodule:: dreutils.benchmark
+.. automodule:: aixport.benchmark
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.constants module
+aixport.constants module
 -------------------------
 
-.. automodule:: dreutils.constants
+.. automodule:: aixport.constants
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.dreutilscmd module
+aixport.aixportcmd module
 ---------------------------
 
-.. automodule:: dreutils.dreutilscmd
+.. automodule:: aixport.aixportcmd
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.evaluate module
+aixport.evaluate module
 ------------------------
 
-.. automodule:: dreutils.evaluate
+.. automodule:: aixport.evaluate
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.exceptions module
+aixport.exceptions module
 --------------------------
 
-.. automodule:: dreutils.exceptions
+.. automodule:: aixport.exceptions
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.pipeline module
+aixport.pipeline module
 ------------------------
 
-.. automodule:: dreutils.pipeline
+.. automodule:: aixport.pipeline
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.predict module
+aixport.predict module
 -----------------------
 
-.. automodule:: dreutils.predict
+.. automodule:: aixport.predict
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.train module
+aixport.train module
 ---------------------
 
-.. automodule:: dreutils.train
+.. automodule:: aixport.train
    :members:
    :undoc-members:
    :show-inheritance:
 
-dreutils.rocratezipper module
+aixport.rocratezipper module
 -----------------------------
 
-.. automodule:: dreutils.rocratezipper
+.. automodule:: aixport.rocratezipper
    :members:
    :undoc-members:
    :show-inheritance:
@@ -87,7 +87,7 @@ dreutils.rocratezipper module
 Module contents
 ---------------
 
-.. automodule:: dreutils
+.. automodule:: aixport
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Integration Tests for `dreutils` package."""
+"""Integration Tests for `aixport` package."""
 
 import os
 import shutil
 import tempfile
 import unittest
-from dreutils.train import SLURMTrainRunner
-from dreutils.exceptions import DreutilsError
+from aixport.train import SLURMTrainRunner
+from aixport.exceptions import AIxPORTError
 
 
 class TestSLURMRunner(unittest.TestCase):
-    """Tests for `dreutils` package."""
+    """Tests for `aixport` package."""
 
     def setUp(self):
         """Set up test fixtures, if any."""
@@ -39,7 +39,7 @@ class TestSLURMRunner(unittest.TestCase):
                                  algorithms=['elastic_drecmd.py'])
             res = runner.run()
             self.fail('Expected exception')
-        except DreutilsError as de:
+        except AIxPORTError as de:
             self.assertEqual('No input RO-Crates', str(de))
         finally:
             shutil.rmtree(temp_dir)

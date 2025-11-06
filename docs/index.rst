@@ -1,14 +1,7 @@
-Welcome to Drug Recommender Engine Utilities's documentation!
-================================================================
+Welcome to Artificial Intelligence Predictive Oncology Research Toolkit documentation!
+==========================================================================================
 
-
-
-
-
-
-Utilities for Drug Recommender Engine Tools
-
-
+Artificial Intelligence Predictive Oncology Research Toolkit
 
 .. toctree::
    :maxdepth: 2

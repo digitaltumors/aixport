@@ -2,19 +2,19 @@
 Usage
 =====
 
-This page should provide information on how to use dreutils
+This page should provide information on how to use aixport
 
 In a project
 --------------
 
-To use Drug Recommender Engine Utilities in a project::
+To use Artificial Intelligence Predictive Oncology Research Toolkit in a project::
 
-    import dreutils
+    import aixport
 
 On the command line
 ---------------------
 
-For information invoke :code:`dreutilscmd.py -h`
+For information invoke :code:`aixportcmd.py -h`
 
 **Example usage**
 
@@ -22,7 +22,7 @@ For information invoke :code:`dreutilscmd.py -h`
 
 .. code-block:: console
 
-   $ dreutilscmd.py train trainout --input input_train.txt --algorithms elasticnet_drecmd.py --run_mode bash
+   $ aixportcmd.py train trainout --input input_train.txt --algorithms elasticnet_drecmd.py --run_mode bash
 
 ``input_train.txt`` should contain absolute paths to ``*_train_rocrate`` directories,
 one per line. The command will populate ``trainout`` with bash script that populates ``trainout/trainedmodels`` with per-algorithm
@@ -36,7 +36,7 @@ trained model directories. Then run the bash script:
 
 .. code-block:: console
 
-   $ dreutilscmd.py predict predictout --input input_test.txt --trainedmodels trainout/trainedmodels --algorithms elasticnet_drecmd.py --run_mode bash
+   $ aixportcmd.py predict predictout --input input_test.txt --trainedmodels trainout/trainedmodels --algorithms elasticnet_drecmd.py --run_mode bash
 
 ``input_test.txt`` should list the ``*_test_rocrate`` directories with test data, and
 ``trainout/trainedmodels`` should contain subdirectories named
@@ -50,13 +50,13 @@ trained model directories. Then run the bash script:
 
 .. code-block:: console
 
-   $ dreutilscmd.py benchmark benchmarkout \
+   $ aixportcmd.py benchmark benchmarkout \
        --input_test_rocrates input_test.txt \
        --predictions_rocrate predictout
 
 ``input_test.txt`` should match the file used during prediction and list the test
 RO-Crates, one per line. ``predictout`` should be the prediction RO-Crate folder produced
-by ``dreutilscmd.py predict`` (or the pipeline), containing the ``predictions`` subdirectory.
+by ``aixportcmd.py predict`` (or the pipeline), containing the ``predictions`` subdirectory.
 The benchmark command creates ``benchmarkout`` (must not already exist), computes
 Pearson/Spearman correlations between predictions and ground truth, writes ``results.csv``,
 and generates ``results.png``/``results.svg`` for quick inspection.
@@ -84,7 +84,7 @@ sharing generated RO-Crates.
 
 .. code-block:: python
 
-   from dreutils import ROCrateZipper
+   from aixport import ROCrateZipper
 
    zipper = ROCrateZipper("/path/to/folder", "/path/to/output.zip")
    zipper.zip_directory()

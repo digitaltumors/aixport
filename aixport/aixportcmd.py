@@ -8,17 +8,17 @@ import traceback
 import json
 import warnings
 
-import dreutils
+import aixport
 from cellmaps_utils import logutils
 import cellmaps_utils.constants
-from dreutils.train import TrainTool
-from dreutils.predict import PredictTool
-from dreutils.evaluate import EvaluateTool
-from dreutils.benchmark import BenchmarkTool
-from dreutils.pipeline import BenchmarkPipelineTool
-from dreutils.pipeline import PredictionPipelineTool
+from aixport.train import TrainTool
+from aixport.predict import PredictTool
+from aixport.evaluate import EvaluateTool
+from aixport.benchmark import BenchmarkTool
+from aixport.pipeline import BenchmarkPipelineTool
+from aixport.pipeline import PredictionPipelineTool
 
-from dreutils.exceptions import DreutilsError
+from aixport.exceptions import AIxPORTError
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ def _parse_arguments(desc, args):
                              'files will not be created')
     parser.add_argument('--version', action='version',
                         version=('%(prog)s ' +
-                                 dreutils.__version__))
+                                 aixport.__version__))
 
     return parser.parse_args(args)
 
@@ -88,11 +88,11 @@ def main(args):
     desc = r"""
 Version {version}
 
-Drug Recommender Engine (DRE) Utilities contains a set of commands that provide
-the ability to train DRE models, assess their performance, run predictions,
+Artificial Intelligence Predictive Oncology Research Toolkit (AIxPORT) contains a set of commands that provide
+the ability to train models, assess their performance, run predictions,
 and evaluate those predictions for a given sample.
 
-    """.format(version=dreutils.__version__,
+    """.format(version=aixport.__version__,
                train=TrainTool.COMMAND,
                predict=PredictTool.COMMAND,
                benchmark=BenchmarkTool.COMMAND,
@@ -119,7 +119,7 @@ and evaluate those predictions for a given sample.
         elif theargs.command == PredictionPipelineTool.COMMAND:
             cmd = PredictionPipelineTool(vars(theargs))
         else:
-            raise DreutilsError('Invalid command: ' + str(theargs.command))
+            raise AIxPORTError('Invalid command: ' + str(theargs.command))
         return cmd.run()
 
     except Exception as e:

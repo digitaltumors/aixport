@@ -1,16 +1,10 @@
-=================================
-Drug Recommender Engine Utilities
-=================================
+===============================================================
+Artificial Intelligence Predictive Oncology Research Toolkit
+===============================================================
 
 
-
-
-
-
-Utilities for Drug Recommender Engine Tools
-
-
-
+AIxPORT is provides standards and tools train, evaluate, and run
+predictions with AI models for predicting drug response.
 
 Dependencies
 ------------
@@ -27,8 +21,8 @@ Installation
 
 .. code-block::
 
-   git clone https://github.com/digitaltumors/dreutils
-   cd dreutils
+   git clone https://github.com/digitaltumors/aixport
+   cd aixport
    pip install -r requirements_dev.txt
    make install
 
@@ -63,19 +57,19 @@ Output:
 Usage
 -----
 
-For a summary of available commands run :code:`dreutilscmd.py -h`. Each sub-command
-also exposes its own help via :code:`dreutilscmd.py <command> -h`.
+For a summary of available commands run :code:`aixportcmd.py -h`. Each sub-command
+also exposes its own help via :code:`aixportcmd.py <command> -h`.
 
 Benchmark mode
 ~~~~~~~~~~~~~~
 
-``dreutilscmd.py`` can score previously generated prediction RO-Crates against their
+``aixportcmd.py`` can score previously generated prediction RO-Crates against their
 matching test RO-Crates. The benchmark command expects:
 
 1. A text file (``--input_test_rocrates``) listing absolute or relative paths to the
    test RO-Crates used to generate the predictions, one path per line.
 2. A prediction RO-Crate directory (``--predictions_rocrate``) produced by
-   ``dreutilscmd.py predict`` or the benchmark pipeline. It must contain the bundled
+   ``aixportcmd.py predict`` or the benchmark pipeline. It must contain the bundled
    ``predictions`` subdirectory created by the CLI.
 3. An output directory that does not yet exist. Benchmark mode will create it and
    write the aggregated metrics, plots, and RO-Crate metadata there.
@@ -84,7 +78,7 @@ Run the benchmark command as:
 
 .. code-block:: console
 
-   dreutilscmd.py benchmark <OUTPUT_DIR> \
+   aixportcmd.py benchmark <OUTPUT_DIR> \
        --input_test_rocrates /path/to/test_rocrates.txt \
        --predictions_rocrate /path/to/predictions_crate
 
@@ -167,8 +161,8 @@ against those changes.
 
 .. code-block::
 
-    # From base directory of this repo dreutils
-    pip uninstall dreutils -y ; make clean dist; pip install dist/dreutils*whl
+    # From base directory of this repo aixport
+    pip uninstall aixport -y ; make clean dist; pip install dist/aixport*whl
 
 
 

@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import unittest
 
-from dreutils.rocratezipper import ROCrateZipper
+from aixport.rocratezipper import ROCrateZipper
 
 
 class TestROCrateZipper(unittest.TestCase):

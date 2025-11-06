@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Integration Tests for `dreutils` package."""
+"""Integration Tests for `aixport` package."""
 
 import os
 
 import unittest
-from dreutils.train import DRETrainRunner
+from aixport.train import DRETrainRunner
 
 
 class TestDRERunner(unittest.TestCase):
-    """Tests for `dreutils` package."""
+    """Tests for `aixport` package."""
 
     def setUp(self):
         """Set up test fixtures, if any."""

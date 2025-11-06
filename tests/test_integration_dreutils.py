@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Integration Tests for `dreutils` package."""
+"""Integration Tests for `aixport` package."""
 
 import os
 
 import unittest
-from dreutils import dreutilscmd
+from aixport import aixportcmd
 
 SKIP_REASON = 'DREUTILS_INTEGRATION_TEST ' \
               'environment variable not set, cannot run integration ' \
@@ -14,7 +14,7 @@ SKIP_REASON = 'DREUTILS_INTEGRATION_TEST ' \
 
 @unittest.skipUnless(os.getenv('DREUTILS_INTEGRATION_TEST') is not None, SKIP_REASON)
 class TestIntegrationDreutils(unittest.TestCase):
-    """Tests for `dreutils` package."""
+    """Tests for `aixport` package."""
 
     def setUp(self):
         """Set up test fixtures, if any."""

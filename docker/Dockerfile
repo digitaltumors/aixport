@@ -4,12 +4,12 @@ FROM continuumio/miniconda3
 RUN apt-get --allow-releaseinfo-change update
 RUN apt-get install -y build-essential 
 
-RUN mkdir /tmp/dreutils
-COPY ./ /tmp/dreutils/
-RUN pip install /tmp/dreutils
+RUN mkdir /tmp/aixport
+COPY ./ /tmp/aixport/
+RUN pip install /tmp/aixport
 
-RUN rm -rf /tmp/dreutils
+RUN rm -rf /tmp/aixport
 
-ENTRYPOINT ["/opt/conda/bin/dreutilscmd.py"]
+ENTRYPOINT ["/opt/conda/bin/aixportcmd.py"]
 
 CMD ["--help"]

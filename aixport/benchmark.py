@@ -1,17 +1,18 @@
 
 import os
 import sys
-import dreutils
-from dreutils.basecmdtool import BaseCommandLineTool
-from dreutils.exceptions import DreutilsError
+import aixport
+from aixport.basecmdtool import BaseCommandLineTool
+from aixport.exceptions import AIxPORTError
 import cellmaps_utils.constants
-import dreutils.constants
+import aixport.constants
 import pandas as pd
 import json
 import glob
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
+
 
 class BenchmarkTool(BaseCommandLineTool):
     """
@@ -26,14 +27,13 @@ class BenchmarkTool(BaseCommandLineTool):
                         should have the following values:
                         {'outdir': <OUTPUT RO-CRATE PATH>,
                          'predictions_rocrate': <PREDICTIONS RO-CRATE PATH>,
-                         '
         :type theargs: dict
         """
         super().__init__(theargs)
 
     def _get_test_rocrates_map(self):
         """
-
+        todo
         """
         results = {}
         with open(self._theargs['input_test_rocrates'], 'r') as f:
@@ -50,14 +50,14 @@ class BenchmarkTool(BaseCommandLineTool):
         :rtype: dict
         """
         if not os.path.isdir(self._theargs['predictions_rocrate']):
-            raise DreutilsError('predictions_rocrate is NOT a directory')
+            raise AIxPORTError('predictions_rocrate is NOT a directory')
 
         results = {}
         predict_rocrate_path = os.path.abspath(os.path.join(self._theargs['predictions_rocrate'],
-                                                            dreutils.constants.PREDICTIONS_DIRECTORY))
+                                                            aixport.constants.PREDICTIONS_DIRECTORY))
 
         if not os.path.isdir(predict_rocrate_path):
-            raise DreutilsError('predictions_rocrate is NOT a directory')
+            raise AIxPORTError('predictions_rocrate is NOT a directory')
 
         for entry in os.listdir(predict_rocrate_path):
             fp = os.path.join(predict_rocrate_path, entry)
@@ -84,7 +84,7 @@ class BenchmarkTool(BaseCommandLineTool):
                 if os.path.isfile(alt_predictions_file):
                     predictions_file = alt_predictions_file
                 else:
-                    raise DreutilsError('Missing predictions file in ' + predict_rocrate_path +
+                    raise AIxPORTError('Missing predictions file in ' + predict_rocrate_path +
                                         '; expected test_predictions.txt or predictions.txt')
 
             predict_df = pd.read_csv(predictions_file, sep='\t', header=None, names=['auc'])
@@ -190,7 +190,7 @@ class BenchmarkTool(BaseCommandLineTool):
             #       predictions found in self._theargs['input']
             #       RO-Crate aka folder
 
-            
+
             results_df = self._evaluate_predictions(predict_rocrates_map, test_rocrates_map)
 
             # save the results_df to a csv file
@@ -218,11 +218,11 @@ class BenchmarkTool(BaseCommandLineTool):
         Version {version}
 
         {cmd} prints Hello world and exits
-        """.format(version=dreutils.__version__,
+        """.format(version=aixport.__version__,
                    cmd=BenchmarkTool.COMMAND)
 
         parser = subparsers.add_parser(BenchmarkTool.COMMAND,
-                                       help='Benchmarks predictions on trained DRE models',
+                                       help='Benchmarks predictions on trained models',
                                        description=desc,
                                        formatter_class=cellmaps_utils.constants.ArgParseFormatter)
         parser.add_argument('outdir',

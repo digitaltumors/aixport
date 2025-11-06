@@ -1,8 +1,8 @@
 
 import sys
-import dreutils
-from dreutils.basecmdtool import BaseCommandLineTool
-from dreutils.exceptions import DreutilsError
+import aixport
+from aixport.basecmdtool import BaseCommandLineTool
+from aixport.exceptions import AIxPORTError
 import cellmaps_utils.constants
 
 
@@ -37,11 +37,11 @@ class EvaluateTool(BaseCommandLineTool):
         Version {version}
 
         {cmd} prints Hello world and exits
-        """.format(version=dreutils.__version__,
+        """.format(version=aixport.__version__,
                    cmd=EvaluateTool.COMMAND)
 
         parser = subparsers.add_parser(EvaluateTool.COMMAND,
-                                       help='Evaluates predictions on trained DRE models (run on single patient/cell line)',
+                                       help='Evaluates predictions on trained models (run on single patient/cell line)',
                                        description=desc,
                                        formatter_class=cellmaps_utils.constants.ArgParseFormatter)
 

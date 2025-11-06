@@ -2,14 +2,14 @@ import os
 import re
 from typing import Dict, Iterator, List
 
-import dreutils
-from dreutils.basecmdtool import BaseCommandLineTool
-from dreutils.exceptions import DreutilsError
-import dreutils.constants
+import aixport
+from aixport.basecmdtool import BaseCommandLineTool
+from aixport.exceptions import AIxPORTError
+import aixport.constants
 import cellmaps_utils.constants
 
 
-class DREPredictRunner(object):
+class AIxPORTPredictRunner(object):
     """
     Base runner that materializes prediction jobs.
     """
@@ -24,7 +24,7 @@ class DREPredictRunner(object):
         self._trained_model_dirs = trained_model_dirs or []
         self._algorithms = algorithms or []
         self._predictions_dir = (os.path.join(self._outdir,
-                               dreutils.constants.PREDICTIONS_DIRECTORY)
+                               aixport.constants.PREDICTIONS_DIRECTORY)
                                  if self._outdir else None)
 
     def run(self):
@@ -38,7 +38,7 @@ class DREPredictRunner(object):
         Serializes input RO-Crate paths.
         """
         if not self._input_rocrates:
-            raise DreutilsError('No input RO-Crates')
+            raise AIxPORTError('No input RO-Crates')
         for ro_crate in self._input_rocrates:
             out.write(ro_crate + '\n')
 
@@ -47,7 +47,7 @@ class DREPredictRunner(object):
         Serializes trained model directories.
         """
         if not self._trained_model_dirs:
-            raise DreutilsError('No trained model directories')
+            raise AIxPORTError('No trained model directories')
         for model_dir in self._trained_model_dirs:
             out.write(model_dir + '\n')
 
@@ -56,7 +56,7 @@ class DREPredictRunner(object):
         Maps algorithm identifiers (without suffix) to commands.
         """
         if not self._algorithms:
-            raise DreutilsError('No algorithms specified')
+            raise AIxPORTError('No algorithms specified')
         lookup = {}
         for algo in self._algorithms:
             key = os.path.splitext(os.path.basename(algo))[0]
@@ -68,7 +68,7 @@ class DREPredictRunner(object):
         Ensures predictions directory exists.
         """
         if self._predictions_dir is None:
-            raise DreutilsError('Output directory is not set')
+            raise AIxPORTError('Output directory is not set')
         os.makedirs(self._predictions_dir, mode=0o755, exist_ok=True)
 
     def _parse_test_rocrate_name(self, path):
@@ -78,7 +78,7 @@ class DREPredictRunner(object):
         base = os.path.basename(os.path.normpath(path))
         suffix = '_test_rocrate'
         if not base.endswith(suffix):
-            raise DreutilsError('Invalid test RO-Crate directory name: ' + base)
+            raise AIxPORTError('Invalid test RO-Crate directory name: ' + base)
         return base[:-len(suffix)], base
 
     def _parse_trained_model_dir(self, path):
@@ -88,7 +88,7 @@ class DREPredictRunner(object):
         base = os.path.basename(os.path.normpath(path))
         token = '_train_rocrate_'
         if token not in base:
-            raise DreutilsError('Invalid trained model directory name: ' + base)
+            raise AIxPORTError('Invalid trained model directory name: ' + base)
         dataset, algorithm = base.split(token, 1)
         return dataset, algorithm
 
@@ -96,11 +96,11 @@ class DREPredictRunner(object):
         """
         Locates supported model file inside trained model directory.
         """
-        for filename in dreutils.constants.SUPPORTED_MODEL_FILES:
+        for filename in aixport.constants.SUPPORTED_MODEL_FILES:
             candidate = os.path.join(trained_model_dir, filename)
             if os.path.isfile(candidate):
                 return candidate
-        raise DreutilsError('No supported model found in ' + trained_model_dir)
+        raise AIxPORTError('No supported model found in ' + trained_model_dir)
 
     def _write_job_manifest(self, manifest_path, jobs):
         """
@@ -127,16 +127,16 @@ class DREPredictRunner(object):
         for rocrate in self._input_rocrates:
             dataset, base_name = self._parse_test_rocrate_name(rocrate)
             if dataset in test_map:
-                raise DreutilsError('Duplicate test RO-Crate for dataset ' + dataset)
+                raise AIxPORTError('Duplicate test RO-Crate for dataset ' + dataset)
             test_map[dataset] = {'path': rocrate, 'name': base_name}
 
         jobs: List[Dict[str, str]] = []
         for trained_model_dir in self._trained_model_dirs:
             dataset, algorithm_name = self._parse_trained_model_dir(trained_model_dir)
             if dataset not in test_map:
-                raise DreutilsError('No matching test RO-Crate for ' + dataset)
+                raise AIxPORTError('No matching test RO-Crate for ' + dataset)
             if algorithm_name not in algorithm_lookup:
-                raise DreutilsError('Algorithm ' + algorithm_name + ' missing from command list')
+                raise AIxPORTError('Algorithm ' + algorithm_name + ' missing from command list')
             model_path = self._get_model_path(trained_model_dir)
             test_entry = test_map[dataset]
             output_subdir = f"{test_entry['name']}_{algorithm_name}"
@@ -153,7 +153,7 @@ class DREPredictRunner(object):
         return jobs
 
 
-class BashPredictRunner(DREPredictRunner):
+class BashPredictRunner(AIxPORTPredictRunner):
     """
     Emits bash script to run predictions serially.
     """
@@ -171,7 +171,7 @@ class BashPredictRunner(DREPredictRunner):
         """
         jobs = self._build_prediction_jobs()
         if not jobs:
-            raise DreutilsError('No prediction jobs to run')
+            raise AIxPORTError('No prediction jobs to run')
 
         manifest_path = os.path.join(self._outdir, 'prediction_jobs.tsv')
         self._write_job_manifest(manifest_path, jobs)
@@ -189,7 +189,7 @@ class BashPredictRunner(DREPredictRunner):
             f.write('#! /bin/bash\n\n')
             f.write('BASEDIR=`dirname $0`\n')
             f.write('pushd $BASEDIR\n')
-            f.write(f'PREDICTIONS_DIR="{dreutils.constants.PREDICTIONS_DIRECTORY}"\n')
+            f.write(f'PREDICTIONS_DIR="{aixport.constants.PREDICTIONS_DIRECTORY}"\n')
             f.write('mkdir -p "${PREDICTIONS_DIR}"\n\n')
             f.write(f'echo "Preparing to run {len(jobs)} prediction jobs"\n\n')
             for job in jobs:
@@ -204,7 +204,7 @@ class BashPredictRunner(DREPredictRunner):
         return 0
 
 
-class SLURMPredictRunner(DREPredictRunner):
+class SLURMPredictRunner(AIxPORTPredictRunner):
     """
     Emits SLURM scripts to run predictions on a cluster.
     """
@@ -259,7 +259,7 @@ class SLURMPredictRunner(DREPredictRunner):
         """
         jobs = self._build_prediction_jobs()
         if not jobs:
-            raise DreutilsError('No prediction jobs to run')
+            raise AIxPORTError('No prediction jobs to run')
 
         manifest_path = os.path.join(self._outdir, 'prediction_jobs.tsv')
         self._write_job_manifest(manifest_path, jobs)
@@ -285,7 +285,7 @@ class SLURMPredictRunner(DREPredictRunner):
 
 class PredictTool(BaseCommandLineTool):
     """
-    Runs predictions using trained DRE models.
+    Runs predictions using trained models.
     """
     COMMAND = 'predict'
 
@@ -311,7 +311,7 @@ class PredictTool(BaseCommandLineTool):
         Resolves trained model directories from file or directory.
         """
         if source is None:
-            raise DreutilsError('--trainedmodels is required')
+            raise AIxPORTError('--trainedmodels is required')
 
         abs_source = os.path.abspath(source)
         trained_models = []
@@ -324,7 +324,7 @@ class PredictTool(BaseCommandLineTool):
                         continue
                     abs_path = os.path.abspath(candidate)
                     if not os.path.isdir(abs_path):
-                        raise DreutilsError('Trained model directory does not exist: ' + abs_path)
+                        raise AIxPORTError('Trained model directory does not exist: ' + abs_path)
                     trained_models.append(abs_path)
         elif os.path.isdir(abs_source):
             for entry in sorted(os.listdir(abs_source)):
@@ -332,10 +332,10 @@ class PredictTool(BaseCommandLineTool):
                 if os.path.isdir(candidate):
                     trained_models.append(os.path.abspath(candidate))
         else:
-            raise DreutilsError('trainedmodels path does not exist: ' + abs_source)
+            raise AIxPORTError('trainedmodels path does not exist: ' + abs_source)
 
         if not trained_models:
-            raise DreutilsError('No trained model directories found in ' + abs_source)
+            raise AIxPORTError('No trained model directories found in ' + abs_source)
         return trained_models
 
     def run(self):
@@ -347,19 +347,19 @@ class PredictTool(BaseCommandLineTool):
         try:
             self._initialize_rocrate()
             predictions_dir = os.path.join(self._theargs['outdir'],
-                                           dreutils.constants.PREDICTIONS_DIRECTORY)
+                                           aixport.constants.PREDICTIONS_DIRECTORY)
             os.makedirs(predictions_dir, mode=0o755, exist_ok=True)
 
             if os.path.isfile(self._theargs['input']):
                 test_rocrates = list(self._get_test_rocrates(self._theargs['input']))
             else:
-                raise DreutilsError('directory path not supported yet')
+                raise AIxPORTError('directory path not supported yet')
 
             trained_model_dirs = self._get_trained_model_dirs(self._theargs['trainedmodels'])
 
             algorithms = [algo for algo in re.split(r'\s*,\s*', self._theargs['algorithms']) if algo]
             if not algorithms:
-                raise DreutilsError('No algorithms specified')
+                raise AIxPORTError('No algorithms specified')
 
             run_mode = self._theargs['run_mode'].lower()
             if run_mode == 'slurm':
@@ -373,7 +373,7 @@ class PredictTool(BaseCommandLineTool):
                                            trained_model_dirs=trained_model_dirs,
                                            algorithms=algorithms)
             else:
-                raise DreutilsError('Invalid run mode: ' + str(self._theargs['run_mode']))
+                raise AIxPORTError('Invalid run mode: ' + str(self._theargs['run_mode']))
 
             exitcode = runner.run()
             self._finalize_rocrate()
@@ -391,11 +391,11 @@ class PredictTool(BaseCommandLineTool):
         Version {version}
 
         {cmd} generates bash or SLURM scripts to run predictions
-        """.format(version=dreutils.__version__,
+        """.format(version=aixport.__version__,
                    cmd=PredictTool.COMMAND)
 
         parser = subparsers.add_parser(PredictTool.COMMAND,
-                                       help='Runs prediction on trained DRE models',
+                                       help='Runs prediction on trained models',
                                        description=desc,
                                        formatter_class=cellmaps_utils.constants.ArgParseFormatter)
 

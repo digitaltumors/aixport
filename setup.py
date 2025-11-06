@@ -7,7 +7,7 @@ import re
 from setuptools import setup, find_packages
 
 
-with open(os.path.join('dreutils', '__init__.py')) as ver_file:
+with open(os.path.join('aixport', '__init__.py')) as ver_file:
     for line in ver_file:
         line = line.rstrip()
         if line.startswith('__version__'):
@@ -48,11 +48,11 @@ setup(
     long_description=readme + '\n\n' + history,
     long_description_content_type='text/x-rst',
     include_package_data=True,
-    keywords='dreutils',
-    name='dreutils',
-    packages=find_packages(include=['dreutils']),
-    package_dir={'dreutils': 'dreutils'},
-    scripts=[ 'dreutils/dreutilscmd.py'],
+    keywords='aixport',
+    name='aixport',
+    packages=find_packages(include=['aixport']),
+    package_dir={'aixport': 'aixport'},
+    scripts=[ 'aixport/aixportcmd.py'],
     setup_requires=setup_requirements,
 
     url=repo_url,

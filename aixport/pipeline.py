@@ -1,8 +1,8 @@
 
 import sys
-import dreutils
-from dreutils.basecmdtool import BaseCommandLineTool
-from dreutils.exceptions import DreutilsError
+import aixport
+from aixport.basecmdtool import BaseCommandLineTool
+from aixport.exceptions import AIxPORTError
 import cellmaps_utils.constants
 
 
@@ -37,7 +37,7 @@ class BenchmarkPipelineTool(BaseCommandLineTool):
         Version {version}
 
         {cmd} prints Hello world and exits
-        """.format(version=dreutils.__version__,
+        """.format(version=aixport.__version__,
                    cmd=BenchmarkPipelineTool.COMMAND)
 
         parser = subparsers.add_parser(BenchmarkPipelineTool.COMMAND,
@@ -79,7 +79,7 @@ class PredictionPipelineTool(BaseCommandLineTool):
         Version {version}
 
         {cmd} prints Hello world and exits
-        """.format(version=dreutils.__version__,
+        """.format(version=aixport.__version__,
                    cmd=PredictionPipelineTool.COMMAND)
 
         parser = subparsers.add_parser(PredictionPipelineTool.COMMAND,

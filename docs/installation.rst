@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install Drug Recommender Engine Utilities, run this command in your terminal:
+To install Artificial Intelligence Predictive Oncology Research Toolkit, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install dreutils
+    $ pip install aixport
 
-This is the preferred method to install Drug Recommender Engine Utilities, as it will always install the most recent stable release.
+This is the preferred method to install Artificial Intelligence Predictive Oncology Research Toolkit, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,19 +26,19 @@ you through the process.
 From sources
 ------------
 
-The sources for Drug Recommender Engine Utilities can be downloaded from the `Github repo`_.
+The sources for Artificial Intelligence Predictive Oncology Research Toolkit can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/digitaltumors/dreutils
+    $ git clone git://github.com/digitaltumors/aixport
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/digitaltumors/dreutils/tarball/master
+    $ curl  -OL https://github.com/digitaltumors/aixport/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/digitaltumors/dreutils
-.. _tarball: https://github.com/digitaltumors/dreutils/tarball/master
+.. _Github repo: https://github.com/digitaltumors/aixport
+.. _tarball: https://github.com/digitaltumors/aixport/tarball/master
