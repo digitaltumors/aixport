@@ -41,3 +41,29 @@ CELL2IND = 'cell2ind.txt'
 CELL2MUTATION = 'cell2mutation.txt'
 GENE2IND = 'gene2ind.txt'
 TRAINING_DATA = 'training_data.txt'
+
+TRAIN_MODE = 'train'
+"""
+Value passed to --mode or self._theargs['mode']
+that tells model to run in train mode
+"""
+
+TEST_MODE = 'test'
+"""
+Value passed to --mode or self._theargs['mode']
+that tells model to run in test/predict mode this is
+the same as calling PREDICT_MODE
+"""
+
+PREDICT_MODE = 'predict'
+"""
+Value passed to --mode or self._theargs['mode']
+that tells model to run in test/predict mode this
+is the same as calling TEST_MODE
+"""
+
+OPTIMIZETRAIN_MODE = 'optimizetrain'
+"""
+Value passed to --mode or self._theargs['mode']
+that tells model to run optimize and then train mode
+"""
