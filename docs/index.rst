@@ -10,7 +10,9 @@ Artificial Intelligence Predictive Oncology Research Toolkit
    installation
    usage
    inputs
+   outputs
    expectedmodelinterface
+   expectedmodeloutputs
    modules
    developer
    authors
