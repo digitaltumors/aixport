@@ -139,9 +139,20 @@ The ``optimizetrain`` output crate MUST contain at least the same files
 required for ``train``:
 
 * ``ro-crate-metadata.json``
+
 * Model artifact (e.g. ``model.pt`` or ``model.pkl``)
+
 * Final ``config.yml`` with *single* hyperparameter values
-* ``train_predictions.txt`` for the final trained model
+
+* **Copy of the input optimisation configuration**:
+  ``input_config.yml``
+  This MUST be a **verbatim copy** of the configuration file used to
+  define the hyperparameter search space, including any parameter ranges.
+
+  *The purpose is to preserve the provenance of the optimisation
+  procedure independent of the final chosen configuration.*
+
+* ``predictions.txt`` for the final trained model
 
 The metadata SHOULD clearly indicate that the model was obtained through
 hyperparameter optimisation (for example via a dedicated property or
@@ -220,7 +231,7 @@ The prediction RO-Crate MUST contain:
     * the test crate used as input, and
     * the trained model crate provided via ``--model``.
 
-* Predictions table (for example ``predictions.txt``)
+* ``predictions.txt``
 
   * Tab-delimited table with one row per inference request.
   * Columns SHOULD include at least:
