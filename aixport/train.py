@@ -54,10 +54,18 @@ class DRETrainRunner(object):
         if out is None:
             return
         for algo in self._algorithms:
-            config_path = self._algorithm_configs.get(algo, '')
-            if config_path is None:
-                config_path = ''
-            out.write(str(config_path) + '\n')
+            config_value = self._algorithm_configs.get(algo, '')
+            if config_value is None:
+                config_value = ''
+            if isinstance(config_value, dict):
+                config_dir = os.path.join(self._outdir, 'algorithm_configs')
+                os.makedirs(config_dir, exist_ok=True)
+                config_path = os.path.join(config_dir, f'{algo}.json')
+                with open(config_path, 'w') as cfg:
+                    json.dump(config_value, cfg, indent=2, sort_keys=True)
+                out.write(str(config_path) + '\n')
+            else:
+                out.write(str(config_value) + '\n')
 
 class BashTrainRunner(DRETrainRunner):
     """
@@ -99,6 +107,19 @@ class BashTrainRunner(DRETrainRunner):
 
         with open(bashjobfile, 'w') as f:
             f.write('#! /bin/bash\n\n')
+            f.write('progress_bar() {\n')
+            f.write('  local current=$1\n')
+            f.write('  local total=$2\n')
+            f.write('  local label="$3"\n')
+            f.write('  local width=30\n')
+            f.write('  local filled=$((current * width / total))\n')
+            f.write('  local empty=$((width - filled))\n')
+            f.write('  local bar=""\n')
+            f.write('  local space=""\n')
+            f.write('  for ((i=0; i<filled; i++)); do bar+="#"; done\n')
+            f.write('  for ((i=0; i<empty; i++)); do space+="-"; done\n')
+            f.write('  printf "\\r%s [%s%s] %d/%d" "$label" "$bar" "$space" "$current" "$total"\n')
+            f.write('}\n\n')
             f.write('BASEDIR=`dirname $0`\n')
             f.write('pushd $BASEDIR\n')
             f.write('OUTDIR="' + str(aixport.constants.TRAINED_MODELS_DIRECTORY) + '"\n')
@@ -109,6 +130,7 @@ class BashTrainRunner(DRETrainRunner):
             f.write("paste algorithms.txt config_files.txt | while IFS=$'\\t' read -r ALGO CONFIG ; do\n")
             f.write('  echo "Training $ALGO"\n')
             f.write('  CONFIG="${CONFIG:-}"\n')
+            f.write('  COUNT=0\n')
             f.write('  for TRAIN_ROCRATE in `cat input_rocrates.txt` ; do\n')
             f.write('    TRAIN_ROCRATE_NAME=`basename $TRAIN_ROCRATE`\n')
             f.write('    ALGO_NOSUFFIX=`echo "$ALGO" | sed "s/\\..*//"`\n')
@@ -117,8 +139,14 @@ class BashTrainRunner(DRETrainRunner):
             f.write('    else\n')
             f.write('      $ALGO "${OUTDIR}/${TRAIN_ROCRATE_NAME}_${ALGO_NOSUFFIX}" --input_crate "$TRAIN_ROCRATE" --mode train\n')
             f.write('    fi\n')
-            f.write('    echo "Exit code: $?"\n')
+            f.write('    STATUS=$?\n')
+            f.write('    if [ $STATUS -ne 0 ]; then\n')
+            f.write('      echo "FAILED ($STATUS): $ALGO $TRAIN_ROCRATE"\n')
+            f.write('    fi\n')
+            f.write('    COUNT=$((COUNT + 1))\n')
+            f.write('    progress_bar "$COUNT" "' + str(num_training_datasets) + '" "$ALGO train"\n')
             f.write('  done\n')
+            f.write('  echo ""\n')
             f.write('done\n')
             f.write('popd\n')
         os.chmod(bashjobfile, 0o755)
@@ -287,10 +315,10 @@ class TrainTool(BaseCommandLineTool):
                 if not isinstance(algo_settings, dict):
                     raise AIxPORTError('Configuration for algorithm ' + str(algo_name) +
                                         ' must be a JSON object or null')
-                config_path = algo_settings.get('config', '')
-                if config_path is None:
-                    config_path = ''
-                algorithm_configs[algo_name] = config_path
+                config_value = algo_settings.get('config', '')
+                if config_value is None:
+                    config_value = ''
+                algorithm_configs[algo_name] = config_value
             return algorithms, algorithm_configs
 
         algorithms = [algo for algo in re.split(r'\s*,\s*', str(algorithms_arg)) if algo]

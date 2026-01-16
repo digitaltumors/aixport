@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from typing import Dict, Iterator, List
 
 import aixport
@@ -15,7 +16,8 @@ class AIxPORTPredictRunner(object):
     """
 
     def __init__(self, outdir=None, input_rocrates=None,
-                 trained_model_dirs=None, algorithms=None):
+                 trained_model_dirs=None, algorithms=None,
+                 algorithm_configs=None):
         """
         Constructor.
         """
@@ -26,6 +28,9 @@ class AIxPORTPredictRunner(object):
         self._predictions_dir = (os.path.join(self._outdir,
                                aixport.constants.PREDICTIONS_DIRECTORY)
                                  if self._outdir else None)
+        if algorithm_configs is None:
+            algorithm_configs = {}
+        self._algorithm_configs = algorithm_configs
 
     def run(self):
         """
@@ -62,6 +67,29 @@ class AIxPORTPredictRunner(object):
             key = os.path.splitext(os.path.basename(algo))[0]
             lookup[key] = algo
         return lookup
+
+    def _get_algorithm_config_lookup(self):
+        """
+        Maps algorithm identifiers to config values.
+        """
+        lookup = {}
+        for algo in self._algorithms:
+            key = os.path.splitext(os.path.basename(algo))[0]
+            lookup[key] = self._algorithm_configs.get(algo, '')
+        return lookup
+
+    def _resolve_algorithm_config(self, algorithm_name, config_lookup):
+        config_value = config_lookup.get(algorithm_name, '')
+        if config_value is None or config_value == '':
+            return ''
+        if isinstance(config_value, dict):
+            config_dir = os.path.join(self._outdir, 'algorithm_configs')
+            os.makedirs(config_dir, exist_ok=True)
+            config_path = os.path.join(config_dir, f'{algorithm_name}.json')
+            with open(config_path, 'w') as cfg:
+                json.dump(config_value, cfg, indent=2, sort_keys=True)
+            return config_path
+        return str(config_value)
 
     def _ensure_predictions_dir(self):
         """
@@ -123,6 +151,7 @@ class AIxPORTPredictRunner(object):
         """
         self._ensure_predictions_dir()
         algorithm_lookup = self._get_algorithm_lookup()
+        config_lookup = self._get_algorithm_config_lookup()
         test_map = {}
         for rocrate in self._input_rocrates:
             dataset, base_name = self._parse_test_rocrate_name(rocrate)
@@ -141,6 +170,7 @@ class AIxPORTPredictRunner(object):
             test_entry = test_map[dataset]
             output_subdir = f"{test_entry['name']}_{algorithm_name}"
             output_dir = os.path.join(self._predictions_dir, output_subdir)
+            config_path = self._resolve_algorithm_config(algorithm_name, config_lookup)
             jobs.append({'dataset_name': dataset,
                          'algorithm_name': algorithm_name,
                          'algorithm_command': algorithm_lookup[algorithm_name],
@@ -149,6 +179,7 @@ class AIxPORTPredictRunner(object):
                          'trained_model_dir': trained_model_dir,
                          'model_path': model_path,
                          'output_dir': output_dir,
+                         'config': config_path,
                          'output_subdir': output_subdir})
         return jobs
 
@@ -159,11 +190,13 @@ class BashPredictRunner(AIxPORTPredictRunner):
     """
 
     def __init__(self, outdir=None, input_rocrates=None,
-                 trained_model_dirs=None, algorithms=None):
+                 trained_model_dirs=None, algorithms=None,
+                 algorithm_configs=None):
         super().__init__(outdir=outdir,
                          input_rocrates=input_rocrates,
                          trained_model_dirs=trained_model_dirs,
-                         algorithms=algorithms)
+                         algorithms=algorithms,
+                         algorithm_configs=algorithm_configs)
 
     def run(self):
         """
@@ -187,18 +220,44 @@ class BashPredictRunner(AIxPORTPredictRunner):
         bashjobfile = os.path.join(self._outdir, 'bash_predict_job.sh')
         with open(bashjobfile, 'w') as f:
             f.write('#! /bin/bash\n\n')
+            f.write('progress_bar() {\n')
+            f.write('  local current=$1\n')
+            f.write('  local total=$2\n')
+            f.write('  local label="$3"\n')
+            f.write('  local width=30\n')
+            f.write('  local filled=$((current * width / total))\n')
+            f.write('  local empty=$((width - filled))\n')
+            f.write('  local bar=""\n')
+            f.write('  local space=""\n')
+            f.write('  for ((i=0; i<filled; i++)); do bar+="#"; done\n')
+            f.write('  for ((i=0; i<empty; i++)); do space+="-"; done\n')
+            f.write('  printf "\\r%s [%s%s] %d/%d" "$label" "$bar" "$space" "$current" "$total"\n')
+            f.write('}\n\n')
             f.write('BASEDIR=`dirname $0`\n')
             f.write('pushd $BASEDIR\n')
             f.write(f'PREDICTIONS_DIR="{aixport.constants.PREDICTIONS_DIRECTORY}"\n')
             f.write('mkdir -p "${PREDICTIONS_DIR}"\n\n')
             f.write(f'echo "Preparing to run {len(jobs)} prediction jobs"\n\n')
+            jobs_by_algo = {}
             for job in jobs:
-                f.write(f'# Dataset: {job["dataset_name"]} Algorithm: {job["algorithm_name"]}\n')
-                f.write(f'{job["algorithm_command"]} "${{PREDICTIONS_DIR}}/{job["output_subdir"]}" '
-                        f'--input_crate "{job["test_rocrate"]}" '
-                        f'--mode test '
-                        f'--model "{job["model_path"]}"\n')
-                f.write('echo "Exit code: $?"\n\n')
+                jobs_by_algo.setdefault(job["algorithm_name"], []).append(job)
+            for algorithm_name, algo_jobs in jobs_by_algo.items():
+                f.write(f'echo "Predicting with {algorithm_name}"\n')
+                f.write('COUNT=0\n')
+                for job in algo_jobs:
+                    f.write(f'# Dataset: {job["dataset_name"]} Algorithm: {job["algorithm_name"]}\n')
+                    f.write(f'{job["algorithm_command"]} "${{PREDICTIONS_DIR}}/{job["output_subdir"]}" '
+                            f'--input_crate "{job["test_rocrate"]}" '
+                            f'--mode test '
+                            f'--model "{job["model_path"]}"')
+                    f.write(f' --config "{job["config"]}"\n' if job["config"] else '\n')
+                    f.write('STATUS=$?\n')
+                    f.write('if [ $STATUS -ne 0 ]; then\n')
+                    f.write(f'  echo "FAILED ($STATUS): {job["algorithm_name"]} {job["test_rocrate"]}"\n')
+                    f.write('fi\n')
+                    f.write('COUNT=$((COUNT + 1))\n')
+                    f.write('progress_bar "$COUNT" "' + str(len(algo_jobs)) + '" "' + algorithm_name + ' predict"\n')
+                f.write('echo ""\n\n')
             f.write('popd\n')
         os.chmod(bashjobfile, 0o755)
         return 0
@@ -210,11 +269,13 @@ class SLURMPredictRunner(AIxPORTPredictRunner):
     """
 
     def __init__(self, outdir=None, input_rocrates=None,
-                 trained_model_dirs=None, algorithms=None):
+                 trained_model_dirs=None, algorithms=None,
+                 algorithm_configs=None):
         super().__init__(outdir=outdir,
                          input_rocrates=input_rocrates,
                          trained_model_dirs=trained_model_dirs,
-                         algorithms=algorithms)
+                         algorithms=algorithms,
+                         algorithm_configs=algorithm_configs)
         self._slurm_partition = None
         self._slurm_account = None
 
@@ -248,7 +309,10 @@ class SLURMPredictRunner(AIxPORTPredictRunner):
                                          job_name=f'{job["algorithm_name"]}_{job["dataset_name"]}_predict')
             f.write(f'mkdir -p "{self._predictions_dir}"\n')
             f.write(f'{job["algorithm_command"]} "{job["output_dir"]}" --input_crate '
-                    f'"{job["test_rocrate"]}" --mode test --model "{job["model_path"]}"\n')
+                    f'"{job["test_rocrate"]}" --mode test --model "{job["model_path"]}"')
+            if job.get("config"):
+                f.write(f' --config "{job["config"]}"')
+            f.write('\n')
             f.write('exit $?\n')
         os.chmod(script_path, 0o755)
         return script_name
@@ -338,6 +402,41 @@ class PredictTool(BaseCommandLineTool):
             raise AIxPORTError('No trained model directories found in ' + abs_source)
         return trained_models
 
+    def _parse_algorithms_argument(self):
+        algorithms_arg = self._theargs.get('algorithms')
+        if algorithms_arg is None:
+            return [], {}
+
+        if os.path.isfile(algorithms_arg):
+            try:
+                with open(algorithms_arg, 'r') as f:
+                    algorithms_data = json.load(f)
+            except (OSError, json.JSONDecodeError) as ex:
+                raise AIxPORTError('Unable to load algorithms configuration file: ' +
+                                   str(ex))
+            if not isinstance(algorithms_data, dict):
+                raise AIxPORTError('Algorithms configuration file must be a JSON object')
+
+            algorithms = []
+            algorithm_configs = {}
+            for algo_name, algo_settings in algorithms_data.items():
+                algorithms.append(algo_name)
+                if algo_settings is None:
+                    algorithm_configs[algo_name] = ''
+                    continue
+                if not isinstance(algo_settings, dict):
+                    raise AIxPORTError('Configuration for algorithm ' + str(algo_name) +
+                                       ' must be a JSON object or null')
+                config_value = algo_settings.get('config', '')
+                if config_value is None:
+                    config_value = ''
+                algorithm_configs[algo_name] = config_value
+            return algorithms, algorithm_configs
+
+        algorithms = [algo for algo in re.split(r'\s*,\s*', str(algorithms_arg)) if algo]
+        algorithm_configs = {algo: '' for algo in algorithms}
+        return algorithms, algorithm_configs
+
     def run(self):
         """
 
@@ -357,7 +456,7 @@ class PredictTool(BaseCommandLineTool):
 
             trained_model_dirs = self._get_trained_model_dirs(self._theargs['trainedmodels'])
 
-            algorithms = [algo for algo in re.split(r'\s*,\s*', self._theargs['algorithms']) if algo]
+            algorithms, algorithm_configs = self._parse_algorithms_argument()
             if not algorithms:
                 raise AIxPORTError('No algorithms specified')
 
@@ -366,12 +465,14 @@ class PredictTool(BaseCommandLineTool):
                 runner = SLURMPredictRunner(outdir=self._theargs['outdir'],
                                             input_rocrates=test_rocrates,
                                             trained_model_dirs=trained_model_dirs,
-                                            algorithms=algorithms)
+                                            algorithms=algorithms,
+                                            algorithm_configs=algorithm_configs)
             elif run_mode == 'bash':
                 runner = BashPredictRunner(outdir=self._theargs['outdir'],
                                            input_rocrates=test_rocrates,
                                            trained_model_dirs=trained_model_dirs,
-                                           algorithms=algorithms)
+                                           algorithms=algorithms,
+                                           algorithm_configs=algorithm_configs)
             else:
                 raise AIxPORTError('Invalid run mode: ' + str(self._theargs['run_mode']))
 
