@@ -85,6 +85,31 @@ config, which lets the optimizer compare multiple feature combinations for the s
 For a fuller parameter guide with condition-specific examples, see
 ``README_MODEL_CONFIG.md`` in this directory.
 
+For end-to-end reproduction of the 3-model optimized runs, see
+``scripts/run_optimized_scenarios.sh``. The script runs:
+
+* ``optimize-train``
+* ``train``
+* ``predict``
+* ``benchmark``
+
+across the selected RO-Crate scenarios using the ElasticNet, RandomForest, and
+XGBoost baselines.
+
+Example:
+
+.. code-block:: console
+
+   bash scripts/run_optimized_scenarios.sh \
+       --outdir /path/to/optimized_run \
+       --ccle-v2-dir /path/to/rocrates/ccle_v2 \
+       --ccle-to-msk-dir /path/to/rocrates/ccle_to_msk_393 \
+       --msk-dir /path/to/rocrates/msk_chord \
+       --msk-to-ccle-dir /path/to/rocrates/msk_to_ccle_393
+
+The script assumes the four repos are cloned side-by-side by default, but that
+can be overridden with environment variables documented in the script header.
+
 Benchmark mode
 ~~~~~~~~~~~~~~
 

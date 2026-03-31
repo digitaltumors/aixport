@@ -338,6 +338,10 @@ If you want binary classification instead of regression, use:
 }
 ```
 
+If you want an end-to-end reproducible example that runs
+`optimize-train -> train -> predict -> benchmark` for the 3 classical models,
+see `scripts/run_optimized_scenarios.sh`.
+
 ---
 
 ## 4) Reproduce the 4-model run (5 drugs)

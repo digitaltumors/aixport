@@ -16,6 +16,11 @@ It focuses on:
 
 This does not cover `nest_vnn_drecmd.py`.
 
+If you want to reproduce the full optimized benchmark workflow end-to-end, use
+[`scripts/run_optimized_scenarios.sh`](scripts/run_optimized_scenarios.sh).
+That script installs the 3 model repos plus `aixport`, builds scenario-specific
+algorithm configs, and runs `optimize-train -> train -> predict -> benchmark`.
+
 ## 1. Config shape
 
 The shared config file lives at:
@@ -323,6 +328,10 @@ Example:
 - `genomic_features_search`: legacy preset search like `["all", "all4"]`
 - `label_threshold_search`: try multiple classification thresholds
 - `loss_search_space`: try multiple classification losses/objectives where supported
+
+To run this through the reproducible shell pipeline instead of invoking each
+step manually, see
+[`scripts/run_optimized_scenarios.sh`](scripts/run_optimized_scenarios.sh).
 
 Example:
 
