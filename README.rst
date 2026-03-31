@@ -70,6 +70,21 @@ Usage
 For a summary of available commands run :code:`aixportcmd.py -h`. Each sub-command
 also exposes its own help via :code:`aixportcmd.py <command> -h`.
 
+The baseline model configs in ``aixport/configs/aixport_models.json`` now support
+feature-set and task selection for the 3 classical models:
+
+* ``feature_types``: explicit combinations such as ``["mutations", "cnd", "cna", "expression"]``
+* ``task_type``: ``regression`` or ``classification``
+* ``label_threshold``: AUC cutoff used when ``task_type`` is ``classification``
+* ``loss_function``: optional classification loss/objective hint (``bce`` is supported
+  for ElasticNet and XGBoost)
+
+``aixportcmd.py optimize-train`` also supports ``feature_set_search`` in the train
+config, which lets the optimizer compare multiple feature combinations for the same model.
+
+For a fuller parameter guide with condition-specific examples, see
+``README_MODEL_CONFIG.md`` in this directory.
+
 Benchmark mode
 ~~~~~~~~~~~~~~
 

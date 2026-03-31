@@ -279,7 +279,13 @@ Example (snippet):
 {
   "elasticnet_drecmd.py": {
     "config": {
-      "train": { "alpha": 0.001, "l1_ratio": 0.5 }
+      "train": {
+        "alpha": 0.001,
+        "l1_ratio": 0.5,
+        "feature_types": ["mutations", "cnd", "cna", "expression"],
+        "task_type": "regression",
+        "label_threshold": 0.5
+      }
     }
   }
 }
@@ -287,6 +293,50 @@ Example (snippet):
 
 When aixport runs, it writes per-model config files to:
 `<outdir>/algorithm_configs/`
+
+Feature/task config notes for the 3 baseline models:
+
+- `feature_types` can be a list such as `["mutations", "cna", "cnd"]` or `["expression"]`
+- `genomic_features` still works for legacy presets like `all` and `all4`
+- `task_type` can be `regression` or `classification`
+- `label_threshold` controls how continuous AUC values are binarized for classification
+- `loss_function` is optional; `bce` is supported for ElasticNet and XGBoost classification modes
+
+If you want `optimize-train` to search across multiple feature combinations, add:
+
+```json
+{
+  "xgboost_drecmd.py": {
+    "config": {
+      "train": {
+        "task_type": "regression",
+        "feature_set_search": [
+          ["mutations", "cnd", "cna"],
+          ["mutations", "cnd", "cna", "expression"],
+          ["expression"]
+        ]
+      }
+    }
+  }
+}
+```
+
+If you want binary classification instead of regression, use:
+
+```json
+{
+  "elasticnet_drecmd.py": {
+    "config": {
+      "train": {
+        "task_type": "classification",
+        "label_threshold": 0.5,
+        "loss_function": "bce",
+        "feature_types": ["mutations", "cnd", "cna", "expression"]
+      }
+    }
+  }
+}
+```
 
 ---
 

@@ -68,7 +68,7 @@
       "train": {
         "cuda": 0,
         "batchsize": 64,
-        "epoch": 10,
+        "epoch": 2,
         "genotype_hiddens": 4,
         "lr": 0.001,
         "wd": 0.001,
