@@ -159,14 +159,31 @@ class AIxPORTPredictRunner(object):
                 raise AIxPORTError('Duplicate test RO-Crate for dataset ' + dataset)
             test_map[dataset] = {'path': rocrate, 'name': base_name}
 
+        import logging
+        _logger = logging.getLogger(__name__)
+
         jobs: List[Dict[str, str]] = []
         for trained_model_dir in self._trained_model_dirs:
-            dataset, algorithm_name = self._parse_trained_model_dir(trained_model_dir)
+            try:
+                dataset, algorithm_name = self._parse_trained_model_dir(trained_model_dir)
+            except AIxPORTError as e:
+                _logger.warning('Skipping trained model dir (bad name): %s — %s',
+                                trained_model_dir, str(e))
+                continue
             if dataset not in test_map:
-                raise AIxPORTError('No matching test RO-Crate for ' + dataset)
+                _logger.warning('Skipping %s — no matching test RO-Crate for dataset %r',
+                                trained_model_dir, dataset)
+                continue
             if algorithm_name not in algorithm_lookup:
-                raise AIxPORTError('Algorithm ' + algorithm_name + ' missing from command list')
-            model_path = self._get_model_path(trained_model_dir)
+                _logger.warning('Skipping %s — algorithm %r not in command list',
+                                trained_model_dir, algorithm_name)
+                continue
+            try:
+                model_path = self._get_model_path(trained_model_dir)
+            except AIxPORTError as e:
+                _logger.warning('Skipping %s — no model file found: %s',
+                                trained_model_dir, str(e))
+                continue
             test_entry = test_map[dataset]
             output_subdir = f"{test_entry['name']}_{algorithm_name}"
             output_dir = os.path.join(self._predictions_dir, output_subdir)

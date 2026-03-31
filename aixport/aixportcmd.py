@@ -12,6 +12,7 @@ import aixport
 from cellmaps_utils import logutils
 import cellmaps_utils.constants
 from aixport.train import TrainTool
+from aixport.optimizetrain import OptimizeTrainTool
 from aixport.predict import PredictTool
 from aixport.evaluate import EvaluateTool
 from aixport.benchmark import BenchmarkTool
@@ -45,6 +46,7 @@ def _parse_arguments(desc, args):
     subparsers.required = True
 
     TrainTool.add_subparser(subparsers)
+    OptimizeTrainTool.add_subparser(subparsers)
     PredictTool.add_subparser(subparsers)
     BenchmarkTool.add_subparser(subparsers)
     EvaluateTool.add_subparser(subparsers)
@@ -108,6 +110,8 @@ and evaluate those predictions for a given sample.
         logger.debug('Command is: ' + str(theargs.command))
         if theargs.command == TrainTool.COMMAND:
             cmd = TrainTool(vars(theargs))
+        elif theargs.command == OptimizeTrainTool.COMMAND:
+            cmd = OptimizeTrainTool(vars(theargs))
         elif theargs.command == PredictTool.COMMAND:
             cmd = PredictTool(vars(theargs))
         elif theargs.command == EvaluateTool.COMMAND:

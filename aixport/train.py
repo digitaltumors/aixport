@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import re
+import hashlib
 import aixport
 from aixport.basecmdtool import BaseCommandLineTool
 from aixport.exceptions import AIxPORTError
@@ -18,7 +19,8 @@ class DRETrainRunner(object):
     Training mode
     """
     def __init__(self, outdir=None, input_rocrates=None, algorithms=None,
-                 algorithm_configs=None):
+                 algorithm_configs=None,
+                 algorithm_rocrate_configs=None):
         """
         Constructor
         """
@@ -27,7 +29,11 @@ class DRETrainRunner(object):
         self._input_rocrates = input_rocrates
         if algorithm_configs is None:
             algorithm_configs = {}
+        if algorithm_rocrate_configs is None:
+            algorithm_rocrate_configs = {}
         self._algorithm_configs = algorithm_configs
+        self._algorithm_rocrate_configs = algorithm_rocrate_configs
+        self._config_path_cache = {}
 
     def run(self):
         """
@@ -55,17 +61,63 @@ class DRETrainRunner(object):
             return
         for algo in self._algorithms:
             config_value = self._algorithm_configs.get(algo, '')
-            if config_value is None:
-                config_value = ''
-            if isinstance(config_value, dict):
-                config_dir = os.path.join(self._outdir, 'algorithm_configs')
-                os.makedirs(config_dir, exist_ok=True)
-                config_path = os.path.join(config_dir, f'{algo}.json')
-                with open(config_path, 'w') as cfg:
-                    json.dump(config_value, cfg, indent=2, sort_keys=True)
-                out.write(str(config_path) + '\n')
-            else:
-                out.write(str(config_value) + '\n')
+            config_path = self._resolve_algorithm_config(algo=algo,
+                                                         rocrate_path='')
+            out.write(str(config_path) + '\n')
+
+    def _materialize_algorithm_config(self, algo=None, config_value=None,
+                                      config_key='default'):
+        """
+        Returns config path/string ready to pass to an algorithm command.
+        """
+        if config_value is None or config_value == '':
+            return ''
+        if not isinstance(config_value, dict):
+            return str(config_value)
+
+        cache_key = (str(algo), str(config_key))
+        if cache_key in self._config_path_cache:
+            return self._config_path_cache[cache_key]
+
+        config_dir = os.path.join(self._outdir, 'algorithm_configs')
+        os.makedirs(config_dir, exist_ok=True)
+
+        algo_base = os.path.basename(str(algo))
+        safe_algo = re.sub(r'[^A-Za-z0-9._-]+', '_', algo_base)
+        digest = hashlib.md5(str(config_key).encode('utf-8')).hexdigest()[:12]
+        config_path = os.path.join(config_dir, f'{safe_algo}_{digest}.json')
+        with open(config_path, 'w') as cfg:
+            json.dump(config_value, cfg, indent=2, sort_keys=True)
+        self._config_path_cache[cache_key] = config_path
+        return config_path
+
+    def _resolve_algorithm_config(self, algo=None, rocrate_path=None):
+        """
+        Resolve algorithm config for a specific RO-Crate with fallback to default.
+        """
+        default_config = self._algorithm_configs.get(algo, '')
+        per_rocrate = self._algorithm_rocrate_configs.get(algo, {})
+
+        override_value = None
+        if isinstance(per_rocrate, dict) and rocrate_path:
+            abs_path = os.path.abspath(rocrate_path)
+            real_path = os.path.realpath(abs_path)
+            base_name = os.path.basename(abs_path)
+            for key in (abs_path, real_path, base_name):
+                if key in per_rocrate:
+                    override_value = per_rocrate.get(key)
+                    break
+
+        if override_value is None:
+            config_value = default_config
+            config_key = 'default'
+        else:
+            config_value = override_value
+            config_key = os.path.basename(rocrate_path) if rocrate_path else 'override'
+
+        return self._materialize_algorithm_config(algo=algo,
+                                                  config_value=config_value,
+                                                  config_key=config_key)
 
 class BashTrainRunner(DRETrainRunner):
     """
@@ -73,13 +125,15 @@ class BashTrainRunner(DRETrainRunner):
     """
 
     def __init__(self, outdir=None, input_rocrates=None, algorithms=None,
-                 algorithm_configs=None):
+                 algorithm_configs=None,
+                 algorithm_rocrate_configs=None):
         """
         Constructor
         """
         super().__init__(outdir=outdir, input_rocrates=input_rocrates,
                          algorithms=algorithms,
-                         algorithm_configs=algorithm_configs)
+                         algorithm_configs=algorithm_configs,
+                         algorithm_rocrate_configs=algorithm_rocrate_configs)
 
     def _write_algorithms(self, out=None):
         """
@@ -95,15 +149,15 @@ class BashTrainRunner(DRETrainRunner):
         """
         bashjobfile = os.path.join(self._outdir, 'bash_train_job.sh')
         input_rocratefile = os.path.join(self._outdir, 'input_rocrates.txt')
-        algosfile = os.path.join(self._outdir, 'algorithms.txt')
-        algoconfigfile = os.path.join(self._outdir, 'config_files.txt')
+        jobsfile = os.path.join(self._outdir, 'training_jobs.tsv')
         with open(input_rocratefile, 'w') as f:
             self._write_input_ro_crates(f)
-
-        with open(algosfile, 'w') as f:
-            self._write_algorithms(out=f)
-        with open(algoconfigfile, 'w') as f:
-            self._write_algorithm_configs(out=f)
+        with open(jobsfile, 'w') as f:
+            for algo in self._algorithms:
+                for rocrate in self._input_rocrates:
+                    config_path = self._resolve_algorithm_config(algo=algo,
+                                                                 rocrate_path=rocrate)
+                    f.write(str(algo) + '\t' + str(config_path) + '\t' + str(rocrate) + '\n')
 
         with open(bashjobfile, 'w') as f:
             f.write('#! /bin/bash\n\n')
@@ -123,31 +177,30 @@ class BashTrainRunner(DRETrainRunner):
             f.write('BASEDIR=`dirname $0`\n')
             f.write('pushd $BASEDIR\n')
             f.write('OUTDIR="' + str(aixport.constants.TRAINED_MODELS_DIRECTORY) + '"\n')
-            num_algos = len(self._algorithms)
-            num_training_datasets = len(self._input_rocrates)
-            f.write('\necho "Training ' + str(num_algos) + ' models on ' +
-                    str(num_training_datasets) + ' training datasets"\n' )
-            f.write("paste algorithms.txt config_files.txt | while IFS=$'\\t' read -r ALGO CONFIG ; do\n")
-            f.write('  echo "Training $ALGO"\n')
+            total_jobs = len(self._algorithms) * len(self._input_rocrates)
+            f.write('\necho "Training ' + str(total_jobs) + ' jobs (' +
+                    str(len(self._algorithms)) + ' algorithms x ' +
+                    str(len(self._input_rocrates)) + ' datasets)"\n')
+            f.write('COUNT=0\n')
+            f.write("while IFS=$'\\t' read -r ALGO CONFIG TRAIN_ROCRATE ; do\n")
+            f.write('  [ -z "$ALGO" ] && continue\n')
+            f.write('  TRAIN_ROCRATE_NAME=`basename "$TRAIN_ROCRATE"`\n')
+            f.write('  ALGO_BASE=`basename "$ALGO"`\n')
+            f.write('  ALGO_NOSUFFIX="${ALGO_BASE%.*}"\n')
             f.write('  CONFIG="${CONFIG:-}"\n')
-            f.write('  COUNT=0\n')
-            f.write('  for TRAIN_ROCRATE in `cat input_rocrates.txt` ; do\n')
-            f.write('    TRAIN_ROCRATE_NAME=`basename $TRAIN_ROCRATE`\n')
-            f.write('    ALGO_NOSUFFIX=`echo "$ALGO" | sed "s/\\..*//"`\n')
-            f.write('    if [ -n "$CONFIG" ]; then\n')
-            f.write('      $ALGO "${OUTDIR}/${TRAIN_ROCRATE_NAME}_${ALGO_NOSUFFIX}" --input_crate "$TRAIN_ROCRATE" --mode train --config "$CONFIG"\n')
-            f.write('    else\n')
-            f.write('      $ALGO "${OUTDIR}/${TRAIN_ROCRATE_NAME}_${ALGO_NOSUFFIX}" --input_crate "$TRAIN_ROCRATE" --mode train\n')
-            f.write('    fi\n')
-            f.write('    STATUS=$?\n')
-            f.write('    if [ $STATUS -ne 0 ]; then\n')
-            f.write('      echo "FAILED ($STATUS): $ALGO $TRAIN_ROCRATE"\n')
-            f.write('    fi\n')
-            f.write('    COUNT=$((COUNT + 1))\n')
-            f.write('    progress_bar "$COUNT" "' + str(num_training_datasets) + '" "$ALGO train"\n')
-            f.write('  done\n')
-            f.write('  echo ""\n')
-            f.write('done\n')
+            f.write('  if [ -n "$CONFIG" ]; then\n')
+            f.write('    "$ALGO" "${OUTDIR}/${TRAIN_ROCRATE_NAME}_${ALGO_NOSUFFIX}" --input_crate "$TRAIN_ROCRATE" --mode train --config "$CONFIG"\n')
+            f.write('  else\n')
+            f.write('    "$ALGO" "${OUTDIR}/${TRAIN_ROCRATE_NAME}_${ALGO_NOSUFFIX}" --input_crate "$TRAIN_ROCRATE" --mode train\n')
+            f.write('  fi\n')
+            f.write('  STATUS=$?\n')
+            f.write('  if [ $STATUS -ne 0 ]; then\n')
+            f.write('    echo "FAILED ($STATUS): $ALGO $TRAIN_ROCRATE"\n')
+            f.write('  fi\n')
+            f.write('  COUNT=$((COUNT + 1))\n')
+            f.write('  progress_bar "$COUNT" "' + str(total_jobs) + '" "train jobs"\n')
+            f.write('done < training_jobs.tsv\n')
+            f.write('echo ""\n')
             f.write('popd\n')
         os.chmod(bashjobfile, 0o755)
         return 0
@@ -159,20 +212,23 @@ class SLURMTrainRunner(DRETrainRunner):
     """
 
     def __init__(self, outdir=None, input_rocrates=None, algorithms=None,
-                 algorithm_configs=None):
+                 algorithm_configs=None,
+                 algorithm_rocrate_configs=None):
         """
         Constructor
         """
         super().__init__(outdir=outdir, input_rocrates=input_rocrates,
                          algorithms=algorithms,
-                         algorithm_configs=algorithm_configs)
+                         algorithm_configs=algorithm_configs,
+                         algorithm_rocrate_configs=algorithm_rocrate_configs)
         self._slurm_partition = None
         self._slurm_account = None
 
     def _write_slurm_directives(self, out=None, allocated_time='4:00:00',
                                 mem='32G', cpus_per_task='4',
                                 job_name='Unknown',
-                                input_rocratefile=None):
+                                input_rocratefile=None,
+                                input_configfile=None):
         """
         Writes SLURM job directives to a bash script file.
 
@@ -201,10 +257,14 @@ class SLURMTrainRunner(DRETrainRunner):
 
         out.write('INPUT_ROCRATE=`head -n $SLURM_ARRAY_TASK_ID ' + input_rocratefile + ' | tail -n 1`\n')
         out.write('OUTPUT_ROCRATENAME=`basename $INPUT_ROCRATE`\n')
+        if input_configfile is not None:
+            out.write('CONFIG=`head -n $SLURM_ARRAY_TASK_ID ' + input_configfile + ' | tail -n 1`\n')
+        else:
+            out.write('CONFIG=""\n')
 
     def _generate_algorithm_command(self, algorithm=None,
                                     input_rocratefile=None,
-                                    algorithm_config=None):
+                                    input_configfile=None):
         """
 
         """
@@ -212,12 +272,19 @@ class SLURMTrainRunner(DRETrainRunner):
         with open(job_script, 'w') as f:
             self._write_slurm_directives(out=f,
                                          job_name=algorithm + '_train',
-                                         input_rocratefile=input_rocratefile)
+                                         input_rocratefile=input_rocratefile,
+                                         input_configfile=input_configfile)
 
-            config_value = '' if algorithm_config is None else str(algorithm_config)
-            if config_value.strip():
-                escaped_config = config_value.replace('"', '\\"')
-                f.write(algorithm + ' "' + aixport.constants.TRAINED_MODELS_DIRECTORY + '/${OUTPUT_ROCRATENAME}_' + algorithm + '" --input_rocrate "$INPUT_ROCRATE" --mode train --config "' + escaped_config + '"\n')
+            if input_configfile is not None:
+                f.write('if [ -n "$CONFIG" ]; then\n')
+                f.write(algorithm + ' "' + aixport.constants.TRAINED_MODELS_DIRECTORY +
+                        '/${OUTPUT_ROCRATENAME}_' + algorithm +
+                        '" --input_rocrate "$INPUT_ROCRATE" --mode train --config "$CONFIG"\n')
+                f.write('else\n')
+                f.write(algorithm + ' "' + aixport.constants.TRAINED_MODELS_DIRECTORY +
+                        '/${OUTPUT_ROCRATENAME}_' + algorithm +
+                        '" --input_rocrate "$INPUT_ROCRATE" --mode train\n')
+                f.write('fi\n')
             else:
                 f.write(algorithm + ' "' + aixport.constants.TRAINED_MODELS_DIRECTORY + '/${OUTPUT_ROCRATENAME}_' + algorithm + '" --input_rocrate "$INPUT_ROCRATE" --mode train\n')
             f.write('exit $?\n')
@@ -248,11 +315,15 @@ class SLURMTrainRunner(DRETrainRunner):
             for algo_index, algo in enumerate(self._algorithms):
                 f.write('# ' + str(algo) + ' no dependencies\n')
                 job_name_var = 'job' + str(algo_index)
-                algo_config = self._algorithm_configs.get(algo, '')
+                config_file = os.path.join(self._outdir, f'config_files_{algo_index}.txt')
+                with open(config_file, 'w') as cfg_out:
+                    for rocrate in self._input_rocrates:
+                        cfg_out.write(self._resolve_algorithm_config(algo=algo,
+                                                                     rocrate_path=rocrate) + '\n')
                 f.write(job_name_var +'=$(sbatch ' +
                         self._generate_algorithm_command(algorithm=algo,
                                                          input_rocratefile=input_rocratefile,
-                                                         algorithm_config=algo_config) + ' | awk \'{print $4}\')\n\n')
+                                                         input_configfile=config_file) + ' | awk \'{print $4}\')\n\n')
 
                 job_names.append(job_name_var)
             dependency_str = ':'.join(job_names)
@@ -293,7 +364,7 @@ class TrainTool(BaseCommandLineTool):
         """
         algorithms_arg = self._theargs.get('algorithms')
         if algorithms_arg is None:
-            return [], {}
+            return [], {}, {}
 
         if os.path.isfile(algorithms_arg):
             try:
@@ -307,10 +378,12 @@ class TrainTool(BaseCommandLineTool):
 
             algorithms = []
             algorithm_configs = {}
+            algorithm_rocrate_configs = {}
             for algo_name, algo_settings in algorithms_data.items():
                 algorithms.append(algo_name)
                 if algo_settings is None:
                     algorithm_configs[algo_name] = ''
+                    algorithm_rocrate_configs[algo_name] = {}
                     continue
                 if not isinstance(algo_settings, dict):
                     raise AIxPORTError('Configuration for algorithm ' + str(algo_name) +
@@ -319,11 +392,19 @@ class TrainTool(BaseCommandLineTool):
                 if config_value is None:
                     config_value = ''
                 algorithm_configs[algo_name] = config_value
-            return algorithms, algorithm_configs
+                rocrate_cfg = algo_settings.get('config_by_rocrate', {})
+                if rocrate_cfg is None:
+                    rocrate_cfg = {}
+                if not isinstance(rocrate_cfg, dict):
+                    raise AIxPORTError('config_by_rocrate for algorithm ' + str(algo_name) +
+                                       ' must be a JSON object')
+                algorithm_rocrate_configs[algo_name] = rocrate_cfg
+            return algorithms, algorithm_configs, algorithm_rocrate_configs
 
         algorithms = [algo for algo in re.split(r'\s*,\s*', str(algorithms_arg)) if algo]
         algorithm_configs = {algo: '' for algo in algorithms}
-        return algorithms, algorithm_configs
+        algorithm_rocrate_configs = {algo: {} for algo in algorithms}
+        return algorithms, algorithm_configs, algorithm_rocrate_configs
 
     def run(self):
         """
@@ -348,7 +429,7 @@ class TrainTool(BaseCommandLineTool):
             elif os.path.isdir(self._theargs['input']):
                 raise AIxPORTError('directory path not supported yet')
 
-            algorithms, algorithm_configs = self._parse_algorithms_argument()
+            algorithms, algorithm_configs, algorithm_rocrate_configs = self._parse_algorithms_argument()
             if len(algorithms) == 0:
                 raise AIxPORTError('No algorithms specified')
 
@@ -356,11 +437,13 @@ class TrainTool(BaseCommandLineTool):
                 runner = SLURMTrainRunner(outdir=self._theargs['outdir'],
                                           algorithms=algorithms,
                                           algorithm_configs=algorithm_configs,
+                                          algorithm_rocrate_configs=algorithm_rocrate_configs,
                                           input_rocrates=train_rocrates)
             elif self._theargs['run_mode'].lower() == 'bash':
                 runner = BashTrainRunner(outdir=self._theargs['outdir'],
                                          algorithms=algorithms,
                                          algorithm_configs=algorithm_configs,
+                                         algorithm_rocrate_configs=algorithm_rocrate_configs,
                                          input_rocrates=train_rocrates)
             else:
                 raise AIxPORTError('Invalid run mode: ' + str(self._theargs['run_mode']))
