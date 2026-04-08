@@ -380,14 +380,17 @@ class TrainTool(BaseCommandLineTool):
             algorithm_configs = {}
             algorithm_rocrate_configs = {}
             for algo_name, algo_settings in algorithms_data.items():
-                algorithms.append(algo_name)
                 if algo_settings is None:
+                    algorithms.append(algo_name)
                     algorithm_configs[algo_name] = ''
                     algorithm_rocrate_configs[algo_name] = {}
                     continue
                 if not isinstance(algo_settings, dict):
                     raise AIxPORTError('Configuration for algorithm ' + str(algo_name) +
                                         ' must be a JSON object or null')
+                if not algo_settings.get('enabled', True):
+                    continue
+                algorithms.append(algo_name)
                 config_value = algo_settings.get('config', '')
                 if config_value is None:
                     config_value = ''

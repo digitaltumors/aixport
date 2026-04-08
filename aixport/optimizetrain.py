@@ -172,7 +172,14 @@ class OptimizeTrainTool(BaseCommandLineTool):
                                    str(ex))
             if not isinstance(algorithms_data, dict):
                 raise AIxPORTError('Algorithms configuration file must be a JSON object')
-            return algorithms_data, list(algorithms_data.keys())
+            filtered = {}
+            for algo_name, algo_settings in algorithms_data.items():
+                if algo_settings is not None and not isinstance(algo_settings, dict):
+                    raise AIxPORTError('Configuration for algorithm {} must be object/null'.format(algo_name))
+                if isinstance(algo_settings, dict) and not algo_settings.get('enabled', True):
+                    continue
+                filtered[algo_name] = algo_settings
+            return filtered, list(filtered.keys())
 
         algorithms = [algo for algo in re.split(r'\s*,\s*', str(algorithms_arg)) if algo]
         algorithms_data = {algo: {'config': ''} for algo in algorithms}

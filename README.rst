@@ -110,6 +110,104 @@ Example:
 The script assumes the four repos are cloned side-by-side by default, but that
 can be overridden with environment variables documented in the script header.
 
+Run On Your Own Dataset
+~~~~~~~~~~~~~~~~~~~~~~~
+
+For a single-command workflow on a new dataset, use
+``scripts/run_custom_dataset.sh``. It will:
+
+* build per-drug ``*_train_rocrate`` and ``*_test_rocrate`` folders from a
+  response table
+* optionally run ``optimize-train``
+* run ``train``
+* run ``predict``
+* run ``benchmark`` unless ``--skip-benchmark`` is set
+
+Example:
+
+.. code-block:: console
+
+   bash scripts/run_custom_dataset.sh \
+       --response-table /path/to/responses.tsv \
+       --shared-features-dir /path/to/shared_features \
+       --output-dir /path/to/custom_run \
+       --model-config /path/to/custom_dataset_models.json
+
+The response table is expected to contain at least:
+
+* a drug column
+* a cell/sample column
+* a label column
+
+Optional columns can also be mapped for:
+
+* SMILES strings
+* source dataset tags
+* split groups (to avoid leakage across related samples)
+
+The shared features directory must contain AIxPORT-compatible feature tables such as:
+
+* ``cell2ind.txt``
+* ``gene2ind.txt``
+* ``cell2mutation.txt``
+* ``cell2cndeletion.txt``
+* ``cell2cnamplification.txt``
+
+Optional files like ``cell2expression.txt`` and ``cell2fusion.txt`` are copied
+when present and automatically validated against the selected model config.
+
+Model Config JSON
+^^^^^^^^^^^^^^^^^
+
+Use ``configs/custom_dataset_models.json`` as the starting point.
+
+Each model entry can include:
+
+* ``enabled``: set to ``false`` to skip that model
+* ``optimize``: set to ``true`` or ``false`` for per-model hyperparameter optimization
+* ``install_path``: optional repo path for ``pip install -e`` before running
+* ``config``: the normal AIxPORT train/test config block
+
+Minimal example:
+
+.. code-block:: json
+
+   {
+     "elasticnet_drecmd.py": {
+       "enabled": true,
+       "optimize": true,
+       "config": {
+         "train": {
+           "feature_types": ["mutations", "cnd", "cna"],
+           "task_type": "regression"
+         },
+         "test": {}
+       }
+     },
+     "mymodel_drecmd.py": {
+       "enabled": true,
+       "optimize": false,
+       "install_path": "/path/to/my_model_repo",
+       "config": {
+         "train": {},
+         "test": {}
+       }
+     }
+   }
+
+Adding your own model is meant to be a one-step config change: add a new entry
+to the JSON file, point ``install_path`` to the repo if needed, and rerun
+``run_custom_dataset.sh``.
+
+Hyperparameter Optimization Control
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``run_custom_dataset.sh`` supports both global and per-model optimization control:
+
+* ``--run-hpo auto``: respect each model's ``optimize`` field
+* ``--run-hpo true``: optimize every enabled model
+* ``--run-hpo false``: skip optimization entirely
+
 Benchmark mode
 ~~~~~~~~~~~~~~
 

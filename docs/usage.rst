@@ -61,6 +61,22 @@ The benchmark command creates ``benchmarkout`` (must not already exist), compute
 Pearson/Spearman correlations between predictions and ground truth, writes ``results.csv``,
 and generates ``results.png``/``results.svg`` for quick inspection.
 
+**Custom dataset pipeline**
+
+.. code-block:: console
+
+   $ bash scripts/run_custom_dataset.sh \
+       --response-table /path/to/responses.tsv \
+       --shared-features-dir /path/to/shared_features \
+       --output-dir /path/to/custom_run \
+       --model-config configs/custom_dataset_models.json
+
+The model config JSON supports:
+
+* ``enabled`` to turn a model on or off
+* ``optimize`` to control per-model hyperparameter optimization
+* ``install_path`` to install a custom model repo before running
+
 Via Docker
 ---------------
 

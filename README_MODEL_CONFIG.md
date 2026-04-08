@@ -16,6 +16,13 @@ It focuses on:
 
 This does not cover `nest_vnn_drecmd.py`.
 
+If you are using `scripts/run_custom_dataset.sh`, the same JSON file may also
+include these wrapper-level fields per model entry:
+
+- `enabled`: if `false`, the model is skipped
+- `optimize`: controls per-model hyperparameter optimization when `--run-hpo auto`
+- `install_path`: optional repo path to install with `pip install -e` before running
+
 If you want to reproduce the full optimized benchmark workflow end-to-end, use
 [`scripts/run_optimized_scenarios.sh`](scripts/run_optimized_scenarios.sh).
 That script installs the 3 model repos plus `aixport`, builds scenario-specific
