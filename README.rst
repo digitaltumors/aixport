@@ -110,14 +110,15 @@ Example:
 The script assumes the four repos are cloned side-by-side by default, but that
 can be overridden with environment variables documented in the script header.
 
-Run On Your Own Dataset
-~~~~~~~~~~~~~~~~~~~~~~~
+Run On Your Own RO-Crates
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For a single-command workflow on a new dataset, use
+For a single-command workflow on a user-provided RO-Crate dataset, use
 ``scripts/run_custom_dataset.sh``. It will:
 
-* build per-drug ``*_train_rocrate`` and ``*_test_rocrate`` folders from a
-  response table
+* scan an existing RO-Crate root for per-drug ``*_train_rocrate`` and
+  ``*_test_rocrate`` folders
+* install AIxPORT and enabled model dependencies by default
 * optionally run ``optimize-train``
 * run ``train``
 * run ``predict``
@@ -128,24 +129,13 @@ Example:
 .. code-block:: console
 
    bash scripts/run_custom_dataset.sh \
-       --response-table /path/to/responses.tsv \
-       --shared-features-dir /path/to/shared_features \
+       --rocrates-dir /path/to/rocrates \
        --output-dir /path/to/custom_run \
        --model-config /path/to/custom_dataset_models.json
 
-The response table is expected to contain at least:
-
-* a drug column
-* a cell/sample column
-* a label column
-
-Optional columns can also be mapped for:
-
-* SMILES strings
-* source dataset tags
-* split groups (to avoid leakage across related samples)
-
-The shared features directory must contain AIxPORT-compatible feature tables such as:
+The input RO-Crate directory should already contain one subdirectory per drug,
+with matching ``*_train_rocrate`` and ``*_test_rocrate`` folders. Each RO-Crate
+must include the standard AIxPORT feature tables such as:
 
 * ``cell2ind.txt``
 * ``gene2ind.txt``
@@ -153,8 +143,12 @@ The shared features directory must contain AIxPORT-compatible feature tables suc
 * ``cell2cndeletion.txt``
 * ``cell2cnamplification.txt``
 
-Optional files like ``cell2expression.txt`` and ``cell2fusion.txt`` are copied
-when present and automatically validated against the selected model config.
+Optional files like ``cell2expression.txt`` and ``cell2fusion.txt`` are
+automatically validated against the selected model config when required.
+
+Unless ``--skip-install`` is set, the script installs ``aixport`` and any
+enabled model packages in editable mode along with their declared Python
+dependencies, then verifies required imports before running.
 
 Model Config JSON
 ^^^^^^^^^^^^^^^^^

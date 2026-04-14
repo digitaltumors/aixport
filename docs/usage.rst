@@ -61,15 +61,21 @@ The benchmark command creates ``benchmarkout`` (must not already exist), compute
 Pearson/Spearman correlations between predictions and ground truth, writes ``results.csv``,
 and generates ``results.png``/``results.svg`` for quick inspection.
 
-**Custom dataset pipeline**
+**Custom RO-Crate pipeline**
 
 .. code-block:: console
 
    $ bash scripts/run_custom_dataset.sh \
-       --response-table /path/to/responses.tsv \
-       --shared-features-dir /path/to/shared_features \
+       --rocrates-dir /path/to/rocrates \
        --output-dir /path/to/custom_run \
        --model-config configs/custom_dataset_models.json
+
+The ``--rocrates-dir`` input must already contain per-drug
+``*_train_rocrate`` and ``*_test_rocrate`` folders.
+
+By default, the script installs ``aixport`` and the enabled model packages
+with their declared Python dependencies before running. Use ``--skip-install``
+only when the environment is already prepared.
 
 The model config JSON supports:
 

@@ -6,30 +6,15 @@ usage() {
   cat <<'EOF'
 Usage:
   bash scripts/run_custom_dataset.sh \
-    --response-table /path/to/responses.tsv \
-    --shared-features-dir /path/to/shared_features \
+    --rocrates-dir /path/to/rocrates \
     --output-dir /path/to/output \
     [--model-config /path/to/custom_dataset_models.json] \
-    [--drug-col drug] \
-    [--cell-col cell_line] \
-    [--group-col cell_line] \
-    [--label-col auc] \
-    [--smiles-col smiles] \
-    [--dataset-col dataset] \
-    [--dataset-default custom] \
-    [--test-fraction 0.2] \
-    [--seed 42] \
-    [--min-rows-per-drug 20] \
-    [--min-groups-per-drug 10] \
-    [--drugs drug1,drug2] \
-    [--label-transform none|log2] \
-    [--log2-offset 1.0] \
     [--run-hpo auto|true|false] \
     [--skip-benchmark] \
     [--skip-install]
 
-This script runs a custom dataset end-to-end:
-  1. Build per-drug train/test RO-Crates from a response table
+This script runs a user-provided RO-Crate dataset end-to-end:
+  1. Scan an existing RO-Crate root for per-drug train/test RO-Crates
   2. Optionally run hyperparameter optimization
   3. Train enabled models
   4. Predict on held-out test RO-Crates
@@ -40,6 +25,7 @@ Model config JSON:
   - Set "enabled": false to skip a model
   - Set "optimize": true/false to control per-model optimization when --run-hpo=auto
   - Add "install_path" for custom models that need pip install -e <repo>
+  - Enabled model dependencies are installed automatically by default
 
 Built-in defaults:
   - elasticnet_drecmd.py, randomforest_drecmd.py, xgboost_drecmd.py default to optimize=true
@@ -59,6 +45,8 @@ Notes:
       XGBOOST_REPO
       NEST_VNN_REPO
   - Override Python with PYTHON_BIN=/path/to/python
+  - The input directory must already contain per-drug directories with
+    *_train_rocrate and *_test_rocrate subdirectories
 EOF
 }
 
@@ -79,36 +67,17 @@ print(os.path.abspath(sys.argv[1]))
 PY
 }
 
-RESPONSE_TABLE=""
-SHARED_FEATURES_DIR=""
+ROCRATES_DIR=""
 OUTPUT_DIR=""
 MODEL_CONFIG="${AIXPORT_REPO}/configs/custom_dataset_models.json"
-DRUG_COL="drug"
-CELL_COL="cell_line"
-GROUP_COL=""
-LABEL_COL="auc"
-SMILES_COL="smiles"
-DATASET_COL="dataset"
-DATASET_DEFAULT="custom"
-TEST_FRACTION="0.2"
-SEED="42"
-MIN_ROWS_PER_DRUG="20"
-MIN_GROUPS_PER_DRUG="10"
-DRUGS=""
-LABEL_TRANSFORM="none"
-LOG2_OFFSET="1.0"
 RUN_HPO="auto"
 SKIP_BENCHMARK=0
 SKIP_INSTALL=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --response-table)
-      RESPONSE_TABLE="$(abs_path "$2")"
-      shift 2
-      ;;
-    --shared-features-dir)
-      SHARED_FEATURES_DIR="$(abs_path "$2")"
+    --rocrates-dir)
+      ROCRATES_DIR="$(abs_path "$2")"
       shift 2
       ;;
     --output-dir)
@@ -117,62 +86,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --model-config)
       MODEL_CONFIG="$(abs_path "$2")"
-      shift 2
-      ;;
-    --drug-col)
-      DRUG_COL="$2"
-      shift 2
-      ;;
-    --cell-col)
-      CELL_COL="$2"
-      shift 2
-      ;;
-    --group-col)
-      GROUP_COL="$2"
-      shift 2
-      ;;
-    --label-col)
-      LABEL_COL="$2"
-      shift 2
-      ;;
-    --smiles-col)
-      SMILES_COL="$2"
-      shift 2
-      ;;
-    --dataset-col)
-      DATASET_COL="$2"
-      shift 2
-      ;;
-    --dataset-default)
-      DATASET_DEFAULT="$2"
-      shift 2
-      ;;
-    --test-fraction)
-      TEST_FRACTION="$2"
-      shift 2
-      ;;
-    --seed)
-      SEED="$2"
-      shift 2
-      ;;
-    --min-rows-per-drug)
-      MIN_ROWS_PER_DRUG="$2"
-      shift 2
-      ;;
-    --min-groups-per-drug)
-      MIN_GROUPS_PER_DRUG="$2"
-      shift 2
-      ;;
-    --drugs)
-      DRUGS="$2"
-      shift 2
-      ;;
-    --label-transform)
-      LABEL_TRANSFORM="$2"
-      shift 2
-      ;;
-    --log2-offset)
-      LOG2_OFFSET="$2"
       shift 2
       ;;
     --run-hpo)
@@ -199,13 +112,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "${RESPONSE_TABLE}" || -z "${SHARED_FEATURES_DIR}" || -z "${OUTPUT_DIR}" ]]; then
-  echo "ERROR: --response-table, --shared-features-dir, and --output-dir are required" >&2
+if [[ -z "${ROCRATES_DIR}" || -z "${OUTPUT_DIR}" ]]; then
+  echo "ERROR: --rocrates-dir and --output-dir are required" >&2
   usage >&2
   exit 1
 fi
 
-for path in "${RESPONSE_TABLE}" "${SHARED_FEATURES_DIR}" "${MODEL_CONFIG}"; do
+for path in "${ROCRATES_DIR}" "${MODEL_CONFIG}"; do
   if [[ ! -e "${path}" ]]; then
     echo "ERROR: Path does not exist: ${path}" >&2
     exit 1
@@ -215,7 +128,6 @@ done
 mkdir -p "${OUTPUT_DIR}"
 
 CONFIG_DIR="${OUTPUT_DIR}/pipeline_configs"
-ROCRATES_DIR="${OUTPUT_DIR}/rocrates"
 OPTIMIZE_OUT="${OUTPUT_DIR}/optimize"
 TRAIN_OUT="${OUTPUT_DIR}/trainout"
 PREDICT_OUT="${OUTPUT_DIR}/predictout"
@@ -223,7 +135,8 @@ BENCHMARK_OUT="${OUTPUT_DIR}/benchmark"
 TRAIN_LIST="${OUTPUT_DIR}/train_rocrates.txt"
 TEST_LIST="${OUTPUT_DIR}/test_rocrates.txt"
 
-rm -rf "${CONFIG_DIR}" "${ROCRATES_DIR}" "${OPTIMIZE_OUT}" "${TRAIN_OUT}" "${PREDICT_OUT}" "${BENCHMARK_OUT}"
+rm -rf "${CONFIG_DIR}" "${OPTIMIZE_OUT}" "${TRAIN_OUT}" "${PREDICT_OUT}" "${BENCHMARK_OUT}"
+rm -f "${TRAIN_LIST}" "${TEST_LIST}"
 mkdir -p "${CONFIG_DIR}"
 
 SELECTED_CONFIG="${CONFIG_DIR}/selected_algorithms.json"
@@ -348,15 +261,15 @@ print(f"Pass-through   : {len(passthrough)}")
 PY
 
 if [[ "${SKIP_INSTALL}" != "1" ]]; then
-  echo "=== Installing aixport and enabled model packages ==="
-  "${PYTHON_BIN}" -m pip install --no-deps -e "${AIXPORT_REPO}"
+  echo "=== Installing aixport and enabled model packages with dependencies ==="
+  "${PYTHON_BIN}" -m pip install -e "${AIXPORT_REPO}"
   while IFS=$'\t' read -r command install_path; do
     if [[ "${command}" == "command" ]]; then
       continue
     fi
     if [[ -n "${install_path}" ]]; then
       echo "Installing ${command} from ${install_path}"
-      "${PYTHON_BIN}" -m pip install --no-deps -e "${install_path}"
+      "${PYTHON_BIN}" -m pip install -e "${install_path}"
     fi
   done < "${INSTALL_MANIFEST}"
 fi
@@ -382,31 +295,54 @@ while IFS=$'\t' read -r command install_path; do
   fi
 done < "${INSTALL_MANIFEST}"
 
-echo "=== Building custom RO-Crates ==="
-"${PYTHON_BIN}" "${SCRIPT_DIR}/create_custom_rocrates.py" \
-  --response_table "${RESPONSE_TABLE}" \
-  --shared_features_dir "${SHARED_FEATURES_DIR}" \
-  --output_dir "${ROCRATES_DIR}" \
-  --drug_col "${DRUG_COL}" \
-  --cell_col "${CELL_COL}" \
-  --group_col "${GROUP_COL}" \
-  --label_col "${LABEL_COL}" \
-  --smiles_col "${SMILES_COL}" \
-  --dataset_col "${DATASET_COL}" \
-  --dataset_default "${DATASET_DEFAULT}" \
-  --test_fraction "${TEST_FRACTION}" \
-  --seed "${SEED}" \
-  --min_rows_per_drug "${MIN_ROWS_PER_DRUG}" \
-  --min_groups_per_drug "${MIN_GROUPS_PER_DRUG}" \
-  --drugs "${DRUGS}" \
-  --label_transform "${LABEL_TRANSFORM}" \
-  --log2_offset "${LOG2_OFFSET}"
+echo "=== Verifying Python runtime dependencies for enabled models ==="
+"${PYTHON_BIN}" - "${INSTALL_MANIFEST}" <<'PY'
+import importlib
+import sys
 
+manifest_path = sys.argv[1]
+
+required_modules = {
+    "aixportcmd.py": ["cellmaps_utils", "matplotlib"],
+    "elasticnet_drecmd.py": ["cellmaps_utils", "numpy", "pandas", "sklearn"],
+    "randomforest_drecmd.py": ["cellmaps_utils", "numpy", "pandas", "sklearn"],
+    "xgboost_drecmd.py": ["cellmaps_utils", "numpy", "pandas", "xgboost"],
+    "nest_vnn_drecmd.py": ["cellmaps_utils", "numpy", "pandas"],
+}
+
+commands = {"aixportcmd.py"}
+with open(manifest_path) as handle:
+    next(handle, None)
+    for line in handle:
+        command = line.rstrip("\n").split("\t", 1)[0].strip()
+        if command:
+            commands.add(command)
+
+missing = []
+for command in sorted(commands):
+    for module_name in required_modules.get(command, []):
+        try:
+            importlib.import_module(module_name)
+        except Exception as exc:
+            missing.append((command, module_name, exc))
+
+if missing:
+    lines = ["Missing Python dependencies for enabled AIxPORT components:"]
+    for command, module_name, exc in missing:
+        lines.append(f"  {command}: import {module_name!r} failed with {type(exc).__name__}: {exc}")
+    lines.append("Re-run without --skip-install to let this script install dependencies,")
+    lines.append("or install the missing Python packages into the selected environment.")
+    raise SystemExit("\n".join(lines))
+
+print("Python runtime dependencies verified.")
+PY
+
+echo "=== Scanning input RO-Crates ==="
 find "${ROCRATES_DIR}" -type d -name "*_train_rocrate" | sort > "${TRAIN_LIST}"
 find "${ROCRATES_DIR}" -type d -name "*_test_rocrate" | sort > "${TEST_LIST}"
 
 if [[ ! -s "${TRAIN_LIST}" || ! -s "${TEST_LIST}" ]]; then
-  echo "ERROR: No train/test RO-Crates were created under ${ROCRATES_DIR}" >&2
+  echo "ERROR: No train/test RO-Crates were found under ${ROCRATES_DIR}" >&2
   exit 1
 fi
 
@@ -591,7 +527,7 @@ fi
 
 echo ""
 echo "Done."
-echo "RO-Crates:   ${ROCRATES_DIR}"
+echo "Input RO-Crates: ${ROCRATES_DIR}"
 echo "Train:       ${TRAIN_OUT}"
 echo "Predict:     ${PREDICT_OUT}"
 if [[ "${SKIP_BENCHMARK}" != "1" ]]; then
