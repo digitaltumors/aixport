@@ -61,6 +61,39 @@ The benchmark command creates ``benchmarkout`` (must not already exist), compute
 Pearson/Spearman correlations between predictions and ground truth, writes ``results.csv``,
 and generates ``results.png``/``results.svg`` for quick inspection.
 
+**VCF conversion**
+
+``aixportcmd.py vcf2inputs`` converts an annotated VCF into genomic feature
+matrices. By default it writes the AIxPORT five-file layout:
+
+.. code-block:: console
+
+   $ aixportcmd.py vcf2inputs patient_test_rocrate \
+       --vcf patient.annotated.vcf.gz \
+       --output-profile aixport \
+       --gene-panel nest_vnn_718
+
+The AIxPORT profile writes ``gene2ind.txt``, ``cell2ind.txt``,
+``cell2mutation.txt``, ``cell2cnamplification.txt``, and
+``cell2cndeletion.txt`` at the output RO-Crate root.
+
+The MutationProjector profile writes tab-delimited ``mut.txt``, ``cna.txt``,
+``cnd.txt``, ``covariates.txt``, and ``outcomes.txt``:
+
+.. code-block:: console
+
+   $ aixportcmd.py vcf2inputs mutationprojector_eval_dataset \
+       --vcf patient.annotated.vcf.gz \
+       --output-profile mutationprojector \
+       --gene-panel mutationprojector_mskimpact468 \
+       --covariates covariates.txt \
+       --outcomes outcomes.txt
+
+VCF records must include gene annotations in ``INFO``. The converter supports
+``CSQ``, ``ANN``, and simple gene-symbol fields such as ``SYMBOL``. It writes
+``conversion_report.json``, ``variants_used.tsv``, and ``variants_skipped.tsv``
+to make skipped and accepted calls auditable.
+
 Via Docker
 ---------------
 

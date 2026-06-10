@@ -70,6 +70,24 @@ the algorithms.  The files below are placed at the top-level of the crate direct
         0,0,0,1,0,0..
         0,1,0,0,0,0..
 
+Generating Feature Tables From VCF
+----------------------------------
+
+``aixportcmd.py vcf2inputs`` can generate genomic feature tables from an
+annotated VCF. The VCF must contain genotype sample columns and gene annotations
+in ``INFO``. Supported annotation sources include VEP-style ``CSQ``,
+SnpEff-style ``ANN``, and simple gene-symbol fields such as ``SYMBOL``.
+
+The default AIxPORT profile writes the five files above using the bundled
+``nest_vnn_718`` panel. A custom ``gene2ind.txt`` can be supplied with
+``--gene2ind`` when testing or adding another model panel.
+
+The MutationProjector profile writes ``mut.txt``, ``cna.txt``, and ``cnd.txt``
+using tab-delimited tables with a leading ``sample`` column and one column per
+gene. ``covariates.txt`` and ``outcomes.txt`` must be supplied or explicitly
+generated with default-value flags because those values are not derivable from
+VCF calls.
+
 References:
 
 1. Park, S., Silva, E., Singhal, A. et al. A deep learning model of tumor cell
@@ -119,4 +137,3 @@ trained model directory (``<dataset>_train_rocrate_<algorithm>``).  The command
 generates per-algorithm output directories beneath
 ``<output>/predictions`` that contain RO-Crate metadata, prediction scores, and
 any algorithm-specific logs.
-

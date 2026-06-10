@@ -17,6 +17,7 @@ from aixport.evaluate import EvaluateTool
 from aixport.benchmark import BenchmarkTool
 from aixport.pipeline import BenchmarkPipelineTool
 from aixport.pipeline import PredictionPipelineTool
+from aixport.vcf2inputs import VCFToInputsTool
 
 from aixport.exceptions import AIxPORTError
 
@@ -50,6 +51,7 @@ def _parse_arguments(desc, args):
     EvaluateTool.add_subparser(subparsers)
     BenchmarkPipelineTool.add_subparser(subparsers)
     PredictionPipelineTool.add_subparser(subparsers)
+    VCFToInputsTool.add_subparser(subparsers)
 
     parser.add_argument('--logconf', default=None,
                         help='Path to python logging configuration file in '
@@ -118,6 +120,8 @@ and evaluate those predictions for a given sample.
             cmd = BenchmarkPipelineTool(vars(theargs))
         elif theargs.command == PredictionPipelineTool.COMMAND:
             cmd = PredictionPipelineTool(vars(theargs))
+        elif theargs.command == VCFToInputsTool.COMMAND:
+            cmd = VCFToInputsTool(vars(theargs))
         else:
             raise AIxPORTError('Invalid command: ' + str(theargs.command))
         return cmd.run()
