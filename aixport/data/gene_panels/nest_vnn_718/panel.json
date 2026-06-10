@@ -1,0 +1,8 @@
+{
+  "id": "nest_vnn_718",
+  "name": "NeST-VNN 718 gene panel",
+  "source": "https://github.com/idekerlab/nest_vnn",
+  "gene2ind": "gene2ind.txt",
+  "aliases": "aliases.tsv",
+  "ordering": "gene2ind"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "mutationprojector_mskimpact468",
+  "name": "MutationProjector MSK-IMPACT468 gene panel",
+  "source": "https://github.com/idekerlab/MutationProjector",
+  "gene2ind": "gene2ind.txt",
+  "aliases": "aliases.tsv",
+  "ordering": "sorted_symbols_after_alias_conversion"
+}
