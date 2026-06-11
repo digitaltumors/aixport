@@ -202,6 +202,7 @@ class BenchmarkTool(BaseCommandLineTool):
             # performed by this tool into the RO-Crate
             # metadata
             self._finalize_rocrate()
+            exitcode = 0
             return exitcode
         finally:
             # write a task finish file

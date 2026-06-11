@@ -1,2 +1,4 @@
 cellmaps_utils
 matplotlib
+numpy
+pandas
