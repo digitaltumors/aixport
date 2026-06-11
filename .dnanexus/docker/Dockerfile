@@ -1,16 +1,25 @@
-FROM continuumio/miniconda3
+# ---- build stage ----
+FROM python:3.9-slim AS build
 
-RUN apt-get --allow-releaseinfo-change update && \
-    apt-get install -y --no-install-recommends build-essential ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential git \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /opt/aixport
-COPY ./ /opt/aixport/
-RUN python -m pip install --no-cache-dir /opt/aixport && \
-    python -m pip check
+WORKDIR /src
+COPY . /src
 
-COPY .dnanexus/run.sh /opt/aixport/run.sh
-RUN chmod a+x /opt/aixport/run.sh
+# build wheels for your package + deps
+RUN pip install --no-cache-dir --upgrade pip wheel \
+    && pip wheel --no-cache-dir --wheel-dir /wheels .
 
-ENTRYPOINT ["/opt/aixport/run.sh"]
+# ---- runtime stage ----
+FROM python:3.9-slim
+
+COPY --from=build /wheels /wheels
+RUN pip install --no-cache-dir /wheels/* \
+    && rm -rf /wheels
+
+
+# the package exposes a CLI users run as `aixportcmd.py -h`
+ENTRYPOINT ["aixportcmd.py"]
 CMD ["--help"]
