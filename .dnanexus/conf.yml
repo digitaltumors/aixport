@@ -7,3 +7,7 @@ computation_name: "AIxPORT"
 applet_id: "aixport"
 image: "digitaltumors/aixport"
 dockerfile: ".dnanexus/docker/Dockerfile"
+changelog:
+  - version: "0.1.0"
+    changes:
+      - "Initial ADAPT-TAP tooling distribution package."
